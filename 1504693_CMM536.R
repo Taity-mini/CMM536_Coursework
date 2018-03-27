@@ -122,8 +122,10 @@ ctrl <- trainControl(method = "repeatedcv",
 # ensure reproducibility of results by setting the seed to a known value
 set.seed(1)
 #use knn
+
+
 mod21.knn<- train(class~., data=training, 
-                  method="knn", tuneGrid=expand.grid(.k=3), trControl=ctrl)
+                  method="knn", tuneGrid=expand.grid(.k=3),trControl=ctrl)
 
 print(mod21.knn)
 summary(mod21.knn$finalModel)
@@ -138,6 +140,8 @@ library(C50)
 library(datasets)
 library(rpart)
 confusionMatrix.train(mod21.knn)
+
+
 
 
 
