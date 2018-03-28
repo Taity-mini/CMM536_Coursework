@@ -27,7 +27,7 @@ nrow(leaveTweets)
  
 # create a corpus for text
 
-buildCorpus <- function (tweets){
+buildCorpus <- function (tweets, wholeDataSet){
   corp <- Corpus(VectorSource(tweets$text))
   
   
@@ -38,30 +38,18 @@ buildCorpus <- function (tweets){
  
   corp <- tm_map(corp, content_transformer(tolower))
   corp <- tm_map(corp, removeNumbers)
-  
-  ##Remove obvious words /stopwords
-  corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "htdb")))
-  
-  ##tweet cleaning
-  
-  # corp = gsub("&amp", "",  corp)
-  # clean_tweet = gsub("(RT|via)((?:\\b\\W*@\\w+)+)", "", clean_tweet)
-  # clean_tweet = gsub("@\\w+", "", clean_tweet)
-  # # clean_tweet = gsub("[[:punct:]]", "", clean_tweet)
-  # # clean_tweet = gsub("[[:digit:]]", "", clean_tweet)
-  # # clean_tweet = gsub("http\\w+", "", clean_tweet)
-  # # clean_tweet = gsub("[ \t]{2,}", "", clean_tweet)
-  # # clean_tweet = gsub("^\\s+|\\s+$", "", clean_tweet) 
-  
-  
-  ##Remove URLS from tweets
-  
+
   toSpace = content_transformer( function(x, pattern) gsub(pattern," ",x) )
+  
+  
+  ##Tweet cleaning
   
   #credit to https://stackoverflow.com/a/31352005/8816204
   corp <-tm_map(corp, toSpace, "(RT|via)((?:\\b\\W*@\\w+)+)")
   corp <-tm_map(corp, toSpace, "@\\w+")
   corp <-tm_map(corp, toSpace, "&amp")
+  
+  ##Remove URLS from tweets
   corp <-tm_map(corp, toSpace, "httpsw+")
   corp <-tm_map(corp, toSpace, "http:\\w+")
   corp <-tm_map(corp, toSpace, "https:\\w+")
@@ -69,9 +57,18 @@ buildCorpus <- function (tweets){
   corp <-tm_map(corp, toSpace, "[ \t]{2,}")
   corp <-tm_map(corp, toSpace, "^\\s+|\\s+$")
   
-  tdm <- TermDocumentMatrix(corp) ##
+
+  # ##Remove obvious words /stopwords
+  if(missing(wholeDataSet)){
+    corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb")))
+  } else if(wholeDataSet == TRUE){
+    corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
+  }
+
   #remove punctuation last so urls are removed correctly
   corp <- tm_map(corp, removePunctuation)
+  
+  tdm <- TermDocumentMatrix(corp)
   
   m <- as.matrix(tdm)
   v <- sort(rowSums(m), decreasing = TRUE)
@@ -82,6 +79,8 @@ buildCorpus <- function (tweets){
 }
 
 
+
+
 leaveWordCloud <- buildCorpus(leaveTweets)
 
 remainWordCloud <- buildCorpus(remainTweets)
@@ -90,9 +89,13 @@ remainWordCloud <- buildCorpus(remainTweets)
 wordcloud(words = leaveWordCloud, freq = d$freq, min.freq = 3,
           max.words=2000, random.order=FALSE, rot.per=0.2,
           colors=brewer.pal(8, "Dark2"))
-
+png("MachineLearningCloud.png")
 
 wordcloud(words = remainWordCloud, freq = d$freq, min.freq = 3,
+          max.words=2000, random.order=FALSE, rot.per=0.2,
+          colors=brewer.pal(8, "Dark2"))
+
+wordcloud(words = tweetWordCloud, freq = d$freq, min.freq = 3,
           max.words=2000, random.order=FALSE, rot.per=0.2,
           colors=brewer.pal(8, "Dark2"))
 
@@ -104,5 +107,36 @@ d$word
 
 
 #Text Analyis
+
+
+# 1) Find the most frequent word in the collection of tweets
+
+tweetWordCloud <-buildCorpus(leaveRemainTweets, TRUE)
+
+head(tweetWordCloud,1)
+
+# 2) Word Assoication 
+
+
+
+
+
+
+# 3) Top Most Frequent Words in Both Leave and Remain tweets
+
+#Leave
+leaveWords <- buildCorpus(leaveTweets, TRUE)
+head(leaveWords, 10)
+
+
+#Remain
+remainWords <- buildCorpus(remainTweets, TRUE)
+head(remainWords, 10)
+
+
+
+
+
+
 
 
