@@ -1,27 +1,44 @@
-#Import library
-rm(list = ls())
 
+# # Function to Install and Load R Packages
+# Install_And_Load <- function(Required_Packages)
+# {
+#   Remaining_Packages <- Required_Packages[!(Required_Packages %in% installed.packages()[,"Package"])];
+#   
+#   if(length(Remaining_Packages)) 
+#   {
+#     install.packages(Remaining_Packages);
+#   }
+#   for(package_name in Required_Packages)
+#   {
+#     library(package_name,character.only=TRUE,quietly=TRUE);
+#   }
+# }
+# 
+# # Specify the list of required packages to be installed and load    
+# Required_Packages=c("ggplot2", "jsonlite", "data.table", "RMOA", "ROCR", "stream", "caret");
+# 
+# # Call the Function
+# Install_And_Load(Required_Packages)
 
-# Function to Install and Load R Packages
-Install_And_Load <- function(Required_Packages)
-{
-  Remaining_Packages <- Required_Packages[!(Required_Packages %in% installed.packages()[,"Package"])];
-  
-  if(length(Remaining_Packages)) 
-  {
-    install.packages(Remaining_Packages);
-  }
-  for(package_name in Required_Packages)
-  {
-    library(package_name,character.only=TRUE,quietly=TRUE);
-  }
-}
+#Clean RStudio Environment
+# rm(list = ls())
 
-# Specify the list of required packages to be installed and load    
-Required_Packages=c("ggplot2", "jsonlite", "data.table", "RMOA", "ROCR", "stream", "caret");
-
-# Call the Function
-Install_And_Load(Required_Packages)
+#Import librarys
+library(caret)
+library(partykit)
+library(mlbench)
+library(RWeka)
+library(C50)
+library(datasets)
+library(rpart)
+library(ggplot2)
+library(jsonlite)
+library(data.table)
+library(RMOA)
+library(ROCR)
+library(stream)
+library(mlbench)
+library(doParallel)
 
 
 #Set working directory
@@ -41,43 +58,48 @@ adultNames <- c("age", "workclass", "fblwgt",
                 "native-country",
                 "class")
 
+
+
 #Import datasets
-adultTrain <- read.table("data/adult.data" ,header = FALSE, sep = ",",
+adult <- read.table("data/adult.data" ,header = FALSE, sep = ",",
                          strip.white = TRUE, col.names = adultNames,
                          na.strings = "?", stringsAsFactors = TRUE)
 
 
 #inspect dataset
-str(adultTrain)
+str(adult)
 
-head(adultTrain, 10)
+head(adult, 10)
 
-summary(adultTrain)
+summary(adult)
 
 #basic exploration
-nrow(adultTrain)
-ncol(adultTrain)
+nrow(adult)
+ncol(adult)
+
+#class distrubtion
+barplot(table(adult$class))
 
 
 
 ##Check unique classes
-length(unique(adultTrain$class))
+length(unique(adult$class))
 
 #Check for missing values ('?')
-table(complete.cases (adultTrain))
+table(complete.cases (adult))
 
 #Remove rows with null values in the workclass & occupation column
-cleanAdultTrain = adultTrain[!is.na(adultTrain$workclass)& !is.na(adultTrain$occupation) & !is.na(adultTrain$class),]
+cleanadult = adult[!is.na(adult$workclass)& !is.na(adult$occupation) & !is.na(adult$class),]
 
 #Remove flwgt feature
-cleanAdultTrain$fblwgt = NULL
+cleanadult$fblwgt = NULL
 
-str(cleanAdultTrain)
+str(cleanadult)
 
 
 
 #Copy dataset
-noClass <-cleanAdultTrain
+noClass <-cleanadult
 #Remove class as it is not being transformed to binary
 noClass$class <- NULL
 
@@ -85,12 +107,12 @@ binaryVars <- caret::dummyVars(~ ., data = noClass)
 newAdult <- predict(binaryVars, newdata = noClass)
 
 #add class to binarised dataset
-binAdult <-cbind(newAdult, cleanAdultTrain[14])
+binAdult <-cbind(newAdult, cleanadult[14])
 View(binAdult)
 
-#transform class to numeric
-str(binAdult$class)
-binAdult$class <- as.numeric(binAdult$class)
+# #transform class to numeric
+# str(binAdult$class)
+# binAdult$class <- as.numeric(binAdult$class)
 
 #remove any rows with NA values
 row.has.na <- apply(binAdult, 1, function(x){any(is.na(x))})
@@ -102,18 +124,26 @@ binAdult <- binAdult[!row.has.na,]
 #classifer
 
 
-#split into training and test sets
+# train_index <- sample(1:nrow(binAdult), 0.8 * nrow(binAdult))
+# test_index <- setdiff(1:nrow(binAdult), train_index)
 
-#split randomly into 80% training and 20% testing datasets
-train_index <- sample(1:nrow(binAdult), 0.8 * nrow(binAdult))
-test_index <- setdiff(1:nrow(binAdult), train_index)
-                            
+
+#Setup Parallel processing to speed up classification modelling
+cl <- makeCluster(detectCores(), type='PSOCK')
+registerDoParallel(cl)
+
+
+#split 80% training and 20% testing datasets
+
+inTrain <- createDataPartition(y=binAdult$class, p=0.8, list=FALSE)
+
+
 #Assign indexes to split the binAdult dataset into training and testing
-training <- binAdult[train_index,]
-testing <- binAdult[test_index,]
+training <- binAdult[inTrain,]
+testing <- binAdult[inTrain,]
 
 
-library(mlbench);library(caret)
+
 ctrl <- trainControl(method = "repeatedcv",
                      repeats = 3,
                      number = 10,
@@ -122,8 +152,6 @@ ctrl <- trainControl(method = "repeatedcv",
 # ensure reproducibility of results by setting the seed to a known value
 set.seed(1)
 #use knn
-
-
 mod21.knn<- train(class~., data=training, 
                   method="knn", tuneGrid=expand.grid(.k=3),trControl=ctrl)
 
@@ -131,16 +159,19 @@ print(mod21.knn)
 summary(mod21.knn$finalModel)
 names(mod21.knn)
 
-#Evaluation
-library(caret)
-library(partykit)
-library(mlbench)
-library(RWeka)
-library(C50)
-library(datasets)
-library(rpart)
-confusionMatrix.train(mod21.knn)
 
+#Evaluation
+predictkNN <- predict(mod21.knn,testing)
+confusionMatrix(predictkNN, testing$class)
+
+ RFModel<- train(class~., data=training,
+                           trControl=ctrl,
+                           method="rf",
+                           tuneLength =10,
+                           metric = 'Accuracy')
+
+
+#Data streaming classifer
 
 
 

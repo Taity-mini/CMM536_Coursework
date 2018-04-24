@@ -24,10 +24,8 @@ nrow(leaveTweets)
 
 
 #Custom Corpus Function for preprocessing  
- 
-# create a corpus for text
 
-buildCorpus <- function (tweets, wholeDataSet){
+buildCorpus <- function (tweets, wholeDataSet, wordAssocation){
   corp <- Corpus(VectorSource(tweets$text))
   
   
@@ -60,25 +58,27 @@ buildCorpus <- function (tweets, wholeDataSet){
 
   # ##Remove obvious words /stopwords
   if(missing(wholeDataSet)){
-    corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb")))
+    corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "\‰Û_", "https", "http", "httpsdb")))
   } else if(wholeDataSet == TRUE){
-    corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
+    corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "\‰Û_", "https", "http", "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
   }
 
   #remove punctuation last so urls are removed correctly
   corp <- tm_map(corp, removePunctuation)
   
-  tdm <- TermDocumentMatrix(corp)
-  
-  m <- as.matrix(tdm)
-  v <- sort(rowSums(m), decreasing = TRUE)
-  d <- data.frame(word = names(v), freq = v)
-  d$word <- gsub("˜", " ", d$word) ## Edit 2
-  
-  tweets <- d$word
+  if(missing(wordAssocation)){
+    tdm <- TermDocumentMatrix(corp)
+    
+    m <- as.matrix(tdm)
+    v <- sort(rowSums(m), decreasing = TRUE)
+    d <- data.frame(word = names(v), freq = v)
+    d$word <- gsub("˜", " ", d$word) ## Edit 2
+    
+    tweets <- d$word
+  }else if(wordAssocation == TRUE){
+    dtm <- DocumentTermMatrix(corp)
+  }
 }
-
-
 
 
 leaveWordCloud <- buildCorpus(leaveTweets)
@@ -89,21 +89,10 @@ remainWordCloud <- buildCorpus(remainTweets)
 wordcloud(words = leaveWordCloud, freq = d$freq, min.freq = 3,
           max.words=2000, random.order=FALSE, rot.per=0.2,
           colors=brewer.pal(8, "Dark2"))
-png("MachineLearningCloud.png")
 
 wordcloud(words = remainWordCloud, freq = d$freq, min.freq = 3,
           max.words=2000, random.order=FALSE, rot.per=0.2,
           colors=brewer.pal(8, "Dark2"))
-
-wordcloud(words = tweetWordCloud, freq = d$freq, min.freq = 3,
-          max.words=2000, random.order=FALSE, rot.per=0.2,
-          colors=brewer.pal(8, "Dark2"))
-
-
-d$word
-# uncomment to Save the image (words cloud in a file)
-# png("MachineLearningCloud.png")
-# Run this alone will produce the image in the RSTudio plots viewer
 
 
 #Text Analyis
@@ -117,9 +106,16 @@ head(tweetWordCloud,1)
 
 # 2) Word Assoication 
 
+wordAssoication <- buildCorpus(leaveRemainTweets,TRUE,TRUE)
 
 
+(freq.terms <- findFreqTerms(wordAssoication, lowfreq = 15))
 
+findAssocs(wordAssoication, freq.terms, 0.2)
+
+
+# cor_1 <- findAssocs(wordAssoication, colnames(wordAssoication)[1:2], 0))
+(cor_1 <- findAssocs(wordAssoication, head(tweetWordCloud,10), 0))
 
 
 # 3) Top Most Frequent Words in Both Leave and Remain tweets

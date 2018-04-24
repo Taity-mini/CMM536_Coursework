@@ -1,4 +1,4 @@
-\documentclass[10pt]{article}
+\documentclass[10pt  ,usenames, dvipsnames]{article}
 \usepackage{graphicx, verbatim}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -10,6 +10,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
 \usepackage{caption}
+\usepackage{listings}
+\usepackage{color}
 \setlength{\textwidth}{6.5in} 
 \setlength{\textheight}{9in}
 \setlength{\oddsidemargin}{0in} 
@@ -22,6 +24,9 @@
 \usepackage[utf8]{inputenc}
 \usepackage{fancyhdr}
 \usepackage{tabularx}
+\usepackage{lmodern} % for bold teletype font
+\usepackage{minted}
+\usepackage{underscore}
 
 \usepackage{hyperref}
 \hypersetup{
@@ -85,144 +90,435 @@ What is this paper about? your text goes here, your text goes here your text goe
 
 \section {Data Streams}
 
+\subsection{Dataset Choice}
+
+The dataset that has been chosen for this part of the coursework is the 'adult' dataset. This is avaiable on the UCI repository.
+
+\url{https://archive.ics.uci.edu/ml/datasets/adult}
+
 The dataset that has been chosen for this part of the course work is IRIS. This is available on the UCI repository. The set was chosen because of .... It proves to be a good set for evaluating 'x' methods .... 
 
 \subsection{Data Exploration}
 
-Explore the dataset as required by the course work. Discuss, visualise, summarise ... Make sure utilise what you have learnt in the class .... Presenting results is important. Here are some expampoles.... \\
-
-It is a good practice to separate the code from the results, this makes the document more readable and easier to reproduce. Here is an example, where I want to show the class distribution in my dataset.
-
-% notice that eval=FALSE will show the code but not execute it, also notice that the comment=NA will cause the # to disappear from the output. 
-
-<<eval=FALSE,comment=NA>>=
-table(iris$Species)
-@
-
-<<echo=FALSE,comment=NA>>=
-table(iris$Species)
-@
-
-\textbf{Tables}: If you want to show results in a table format, the package \textcolor{blue}{xtable} is very useful. Here is a an example: suppose you want to show the head of iris data, a simple way is to do the following: 
-
-<<eval=FALSE,comment=NA>>=
-head(iris)
-@
-
-<<echo=FALSE,comment=NA>>=
-head(iris)
-@
-
-This is fine, but sometimes you want to produce  the results in a table-format at a better standard. See the code below. Often, I won't show the code below, nor make it executable (i.e. set eval=FALSE). Instead, run the commands below in the console, then copy the resulting latex code from consle and paste it below, and add caption and label as shown below
-
-<<eval=FALSE>>=
-# load package 
-library(xtable)
-# run the following command in the console
-print(xtable(head(iris))
-# copy the resulting latex code from consle and paste it below
-# Add caption and label as shown below
-@
-
-% latex table generated in R 3.3.0 by xtable 1.8-2 package
-% Fri Mar  2 11:56:14 2018
-\begin{table}[ht]
-\centering
-\caption{Iris Data}
-\begin{tabular}{rrrrrl}
-  \hline
- & Sepal.Length & Sepal.Width & Petal.Length & Petal.Width & Species \\ 
-  \hline
-1 & 5.10 & 3.50 & 1.40 & 0.20 & setosa \\ 
-  2 & 4.90 & 3.00 & 1.40 & 0.20 & setosa \\ 
-  3 & 4.70 & 3.20 & 1.30 & 0.20 & setosa \\ 
-  4 & 4.60 & 3.10 & 1.50 & 0.20 & setosa \\ 
-  5 & 5.00 & 3.60 & 1.40 & 0.20 & setosa \\ 
-  6 & 5.40 & 3.90 & 1.70 & 0.40 & setosa \\ 
-   \hline
-\end{tabular}
-\label{tab1}
-\end{table}
-
-The good thing about the above approach is you can always refer to the table in your document. For example 'As can be seen in Table~\ref{tab1},...'
-
-\textbf{Figures:} are important part of your analysis, and also good way to give insight about the dataset you are working with. You will use packages like \textit{ggplot2} to produce some visuals. Lets start with a simple example to show how to present your visuals in the report with proper labels and captions. Remember, I need to see the code the produced the figure as well. \\
-
-Suppose, I just want to create a plot that shows the relation between Petal width and length and map the colour and shape to the Species (class label in my dataset). \\
-
-First, I will write my code, but notice that my chunk definition is set as follows\\ \textit{(<<warning=FALSE,message=FALSE,eval=FALSE>>=)}, I set warning and message to FALSE, because I don't want these warnings/ messages to appear in my final output. 
+The main purpose of the adult dataset is to find out which characteristics of the us population affect if their income is either <=$50k or >=$50k
 
 
-<<warning=FALSE,message=FALSE,eval=FALSE>>=
+
+To start off I will clear the RStudio environment and import the required libaries.
+
+<<eval=FALSE,comment=TRUE>>=
+#Clean RStudio Environment
+rm(list = ls())
+
+#Import librarys
+library(caret)
+library(partykit)
+library(mlbench)
+library(RWeka)
+library(C50)
+library(datasets)
+library(rpart)
 library(ggplot2)
-
-p <- ggplot(iris, aes(x=Petal.Length, 
-                      y = Petal.Width,color=Species) )
-p <- p+ geom_point(aes(shape=Species))
-p <- p + xlab('Petal Length')
-p <- p + ylab('Petal Width')
-p <- p + theme_bw()
-p
-
+library(jsonlite)
+library(data.table)
+library(RMOA)
+library(ROCR)
+library(stream)
+library(mlbench)
+library(doParallel)
+require(tm)
+require(wordcloud)
+library(wordcloud,quietly=TRUE)
+library(RColorBrewer,quietly=TRUE)
 @
 
-Make sure that your code is running, and once everything is OK, then you need to insert the above code within a Latex code used to insert images (check the .rnw file to see how we achieved this). Again, remember the caption and the label which allows you to refer to this figure from anywhere in your document (Figure~\ref{fig1}). Notice the header of the chunk code in the \textit{.rnw} file. 
+<<warning=FALSE,echo=FALSE, comment=FALSE, message=FALSE>>==
+
+#Import librarys
+library(caret)
+library(partykit)
+library(mlbench)
+library(RWeka)
+library(C50)
+library(datasets)
+library(rpart)
+library(ggplot2)
+library(jsonlite)
+library(data.table)
+library(RMOA)
+library(ROCR)
+library(stream)
+library(mlbench)
+library(doParallel)
+require(tm)
+require(wordcloud)
+library(wordcloud,quietly=TRUE)
+library(RColorBrewer,quietly=TRUE)
+@
+
+Then set the working directory to the coursework folder
+
+<<eval=FALSE,comment=TRUE>>=
+#Set working directory
+setwd("~/CMM536 Advanced Data Science/Coursework/CMM536_Coursework")
+@
+
+<<warning=FALSE,echo=FALSE, comment=FALSE, message=FALSE>>==
+setwd("~/CMM536 Advanced Data Science/Coursework/CMM536_Coursework")
+@
+
+\clearpage
+
+In order to the import the adult dataset, the feature names first need to be defined.
+<<eval=FALSE,comment=TRUE>>=
+#Feature names
+adultNames <- c("age", "workclass", "fblwgt",
+                "education", "education-num", 
+                "martial-status",
+                "occupation",
+                "relationship",
+                "race",
+                "sex",
+                "captial-gain",
+                "captain-loss",
+                "hours-per-week",
+                "native-country",
+                "class")
+@
+
+<<warning=FALSE,echo=FALSE>>==
+#Feature names
+adultNames <- c("age", "workclass", "fblwgt",
+                "education", "education-num", 
+                "martial-status",
+                "occupation",
+                "relationship",
+                "race",
+                "sex",
+                "captial-gain",
+                "captain-loss",
+                "hours-per-week",
+                "native-country",
+                "class")
+@
+
+The adult dataset is then imported from adult.data file:
+<<eval=FALSE,comment=TRUE>>=
+
+
+#Import datasets
+adult <- read.table("data/adult.data" ,header = FALSE, sep = ",",
+                         strip.white = TRUE, col.names = adultNames,
+                         na.strings = "?", stringsAsFactors = TRUE)
+@
+
+
+<<warning=FALSE,echo=FALSE>>==
+
+#Import datasets
+adult <- read.table("data/adult.data" ,header = FALSE, sep = ",",
+                         strip.white = TRUE, col.names = adultNames,
+                         na.strings = "?", stringsAsFactors = TRUE)
+@
+
+Now the adult dataset is imported, it's time for some basic exploration
+
+Number of rows (instances) in the dataset
+
+<<eval=FALSE,comment=TRUE>>=
+nrow(adult)
+@
+
+<<warning=FALSE,echo=FALSE>>==
+nrow(adult)
+@
+
+The number of columns (features)
+
+<<eval=FALSE,comment=TRUE>>=
+ncol(adult)
+@
+
+<<warning=FALSE,echo=FALSE>>==
+ncol(adult)
+@
+
+Summary of the adult dataset:
+
+<<eval=FALSE,comment=TRUE>>=
+#inspect dataset
+str(adult)
+@
+
+<<warning=FALSE,echo=FALSE>>==
+str(adult)
+@
+
+
+
+Now that some basic data exploration is covered, next to inspect the dataset a bit further. Starting with the class distribution in the adult dataset, see (Figure~\ref{fig1})
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#Class Distribution
+barplot(table(adult$class))
+@
 
 \begin{figure}[H]
 \begin{center}
-
-<<warning=FALSE,echo=FALSE,fig.height=4.5,out.width=".76\\linewidth">>=
-library(ggplot2)
-
-p <- ggplot(iris, aes(x=Petal.Length, 
-                      y = Petal.Width,color=Species) )
-p <- p+ geom_point(aes(shape=Species))
-p <- p + xlab('Petal Length')
-p <- p + ylab('Petal Width')
-p <- p + theme_bw()
-p
-
+<<warning=FALSE,echo=FALSE,fig.height=8.5,out.width=".76\\linewidth">>=
+#Class Distribution
+barplot(table(adult$class))
 @
-\caption {Petal Length /Width per species in IRIS set}
+\caption {Barplot of Class Distribution}
 \label{fig1}
 \end {center}
 \end {figure}
 
 
-
+\clearpage
 
 \subsection{Build Classifier}
 
+\subsubsection{Pre-Processing}
+Before the adult dataset can classified, some pre-processing is required first.
 
-Complete this part as required by the coursework sheet. Again, be clear, visuals always helps in communicating results. Justify your choices and explain your methods. 
+The dataset is checked for missing values ('?')
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#Check for missing values ('?')
+table(complete.cases (adult))
+@
+
+<<warning=FALSE,echo=FALSE>>==
+table(complete.cases (adult))
+@
+
+As shown above there are missing values in the workclass,occupation and class columns. so these are removed.
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+cleanadult = adult[!is.na(adult$workclass)& !is.na(adult$occupation) & !is.na(adult$class),]
+@
 
 
+<<warning=FALSE,echo=FALSE>>==
+cleanadult = adult[!is.na(adult$workclass)& !is.na(adult$occupation) & !is.na(adult$class),]
+@
 
+The flwgt feature is also removed as it's not required.
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#Remove flwgt feature
+cleanadult$fblwgt = NULL
+@
+
+<<warning=FALSE,echo=FALSE>>==
+#Remove flwgt feature
+cleanadult$fblwgt = NULL
+@
+
+Lets inspect the cleanadult dataframe before going further:
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+str(cleanadult)
+@
+
+<<warning=FALSE,echo=FALSE>>==
+str(cleanadult)
+@
+
+
+\clearpage
+
+As the adult dataset is a mixture of factors, integers and characters, I decided that transforming the dataset into binary. This will be create features based on every possible value in the dataset.
+
+The cleanadult dataframe is first copied and the class is removed (it's not being transforme dinto binary)
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#Copy dataset
+noClass <-cleanadult
+#Remove class as it is not being transformed to binary
+noClass$class <- NULL
+@
+
+
+<<warning=FALSE,echo=FALSE>>==
+#Copy dataset
+noClass <-cleanadult
+#Remove class as it is not being transformed to binary
+noClass$class <- NULL
+@
+
+Then the noClass dataframe is transformed into binary
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+binaryVars <- caret::dummyVars(~ ., data = noClass)
+newAdult <- predict(binaryVars, newdata = noClass)
+@
+
+<<warning=FALSE,echo=FALSE>>==
+binaryVars <- caret::dummyVars(~ ., data = noClass)
+newAdult <- predict(binaryVars, newdata = noClass)
+@
+
+The class feature is then added to the binarised dataset
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#add class to binarised dataset
+binAdult <-cbind(newAdult, cleanadult[14])
+@
+
+<<warning=FALSE,echo=FALSE>>==
+binAdult <-cbind(newAdult, cleanadult[14])
+@
+
+Any rows with NA values after being binary transformed.
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#remove any rows with NA values
+row.has.na <- apply(binAdult, 1, function(x){any(is.na(x))})
+sum(row.has.na)
+binAdult <- binAdult[!row.has.na,]
+@
+
+Number of NA rows removed.
+<<warning=FALSE,echo=FALSE, cache=TRUE>>==
+#remove any rows with NA values
+row.has.na <- apply(binAdult, 1, function(x){any(is.na(x))})
+sum(row.has.na)
+binAdult <- binAdult[!row.has.na,]
+@
+
+\clearpage
+
+\subsubsection{Classification}
+
+When it came to dividing the mushroom dataset into training and testing subsets, I decided to go with 80
+percent training and 20 percent testing split as a starting point/baseline. 
+Since the class distrubtion is unbalenced, I thought this split would cover the majority of cases.
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#split 80% training and 20% testing datasets
+inTrain <- createDataPartition(y=binAdult$class, p=0.8, list=FALSE)
+
+#Assign indexes to split the binAdult dataset into training and testing
+training <- binAdult[inTrain,]
+testing <- binAdult[inTrain,]
+@
+
+<<warning=FALSE,echo=FALSE, cache=TRUE>>==
+#split 80% training and 20% testing datasets
+inTrain <- createDataPartition(y=binAdult$class, p=0.8, list=FALSE)
+
+#Assign indexes to split the binAdult dataset into training and testing
+training <- binAdult[inTrain,]
+testing <- binAdult[inTrain,]
+@
+
+
+For the initial classifier I decided to go with the kNN Classifier as it has proven to be a good baseline in previous labs and exercises in R.
+Before the classification begins, parallel processing is enabled to speed up this process.
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#Setup Parallel processing to speed up classification modelling
+cl <- makeCluster(detectCores(), type='PSOCK')
+registerDoParallel(cl)
+@
+
+<<warning=FALSE,echo=FALSE>>==
+#Setup Parallel processing to speed up classification modelling
+cl <- makeCluster(detectCores(), type='PSOCK')
+registerDoParallel(cl)
+@
+
+The train control is set to repeated-cross-validation with 10 folds and 3 repeats
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+ctrl <- trainControl(method = "repeatedcv",
+                     repeats = 3,
+                     number = 10,
+                     verboseIter=TRUE)
+@
+
+
+<<warning=FALSE,echo=FALSE>>==
+ctrl <- trainControl(method = "repeatedcv",
+                     repeats = 3,
+                     number = 10,
+                     verboseIter=TRUE)
+@
+Next the seed is set to 1, in order to make the model reproducible and the kNN model is set up with the train control from above and k value set to 3.
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+# ensure reproducibility of results by setting the seed to a known value
+set.seed(1)
+#use knn
+mod21.knn<- train(class~., data=training, 
+                  method="knn", tuneGrid=expand.grid(.k=3),trControl=ctrl)
+@
+
+<<warning=FALSE,echo=FALSE, message=FALSE, cache=TRUE>>==
+set.seed(1)
+#use knn
+mod21.knn<- train(class~., data=training, 
+                  method="knn", tuneGrid=expand.grid(.k=3),trControl=ctrl)
+@
+
+
+\clearpage
+
+Once the knn Model is complete, it’s time to analyse the results, first with a print of the kNNModel as shown below.
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+print(mod21.knn)
+@
+
+<<warning=FALSE,echo=FALSE>>==
+print(mod21.knn)
+@
+
+\clearpage
+
+\subsubsection {Evalulation}
+
+To evaluate the module, a confusion matrix is produced by predicting the against the testing (20 percent of the total dataset ) subset.
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#Evaluation
+predictkNN <- predict(mod21.knn,testing)
+confusionMatrix(predictkNN, testing$class)
+@
+
+
+<<warning=FALSE,echo=FALSE, cache=TRUE>>==
+#Evaluation
+predictkNN <- predict(mod21.knn,testing)
+confusionMatrix(predictkNN, testing$class)
+@
+
+\clearpage
 
 \subsection{Build Stream Classifier}
 
 Same as above. Complete this part as required by the coursework sheet. Again, be clear, visuals always helps in communicating results. Justify your choices and explain your methods. 
 
 
-
+\clearpage
 
 \section {Text Classification}
+For this task a csv of leave/remain tweets of the brexit campaign was provided.
 
-Same as above. Complete this part as required by the coursework sheet. Again, be clear, visuals always helps in communicating results. Justify your choices and explain your methods. 
-
+The was first imported:
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+leaveRemainTweets <- read.csv("data/leaveRemainTweets_CW.csv", header=TRUE)
+@
 
 \subsection{Preprocessing}
 
-Record, explain and justify your appraoch. Record, explain and justify your appraoch. 
-Record, explain and justify your appraoch. Record, explain and justify your appraoch.Record, explain and justify your appraoch.Record, explain and justify your appraoch.Record, explain and justify your appraoch.Record, explain and justify your appraoch. 
-Record, explain and justify your appraoch. 
+In order to pre-process the leaveRemain tweets, I built a custom corpus function. Which can be found at (Figure~\ref{figbuildCorpus})
 
+
+\clearpage
 
 \subsection{Text Analysis}
 
-Record, explain and justify your appraoch.Complete this part as required by the coursework sheet. Again, be clear, visuals always helps in communicating results. Justify your choices and explain your methods. 
 
 
+\clearpage
 
 \subsection{Text Classification}
 
@@ -231,10 +527,96 @@ Use one of the ‘R’ packages to build a classifier that classifies the tweets
 Complete this part as required by the coursework sheet. Again, be clear, visuals always helps in communicating results. Justify your choices and explain your methods. 
 
 
-\section{Reproducing Results}
+\clearpage
 
-You don't need to have a section called \textbf{Reproducing Results}, your report itself will be the answer for this section. 
+\section{Appendix}
 
+\subsection{Custom buildCorpus Function}
+For the pre-processing in the text-classification task, I created a custom corpus function that will build a corpus of the leave/remain tweets and change the word filtering based on the optional function parameters.
+
+\lstset{ 
+  language=R,                     % the language of the code
+  basicstyle=\tiny\ttfamily, % the size of the fonts that are used for the code
+  stepnumber=1,                   % the step between two line-numbers. If it is 1, each line
+                                  % will be numbered
+  numbersep=5pt,                  % how far the line-numbers are from the code
+  backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+  showspaces=false,               % show spaces adding particular underscores
+  showstringspaces=false,         % underline spaces within strings
+  showtabs=false,                 % show tabs within strings adding particular underscores
+  frame=single,                   % adds a frame around the code
+  rulecolor=\color{black},        % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. commens (green here))
+  tabsize=2,                      % sets default tabsize to 2 spaces
+  captionpos=b,                   % sets the caption-position to bottom
+  breaklines=true,                % sets automatic line breaking
+  breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+ keywordstyle=\color{RoyalBlue},      % keyword style
+  commentstyle=\color{YellowGreen},   % comment style
+  stringstyle=\color{ForestGreen}      % string literal style
+} 
+% 
+% \label{figBuildCorpus}
+% \begin{figure}[H]
+% \caption {Custom buildCorpus function}
+% \end {figure}
+%     \begin{lstlisting}
+%     #Custom Corpus Function for preprocessing  
+% 
+% buildCorpus <- function (tweets, wholeDataSet, wordAssocation){
+%   corp <- Corpus(VectorSource(tweets$text))
+%   
+%   
+%   corp <- tm_map(corp,
+%                  content_transformer(function(x) iconv(x, to='ASCII',
+%                                                        sub='byte')))
+%   # remove stop words and other preprocessing
+%  
+%   corp <- tm_map(corp, content_transformer(tolower))
+%   corp <- tm_map(corp, removeNumbers)
+% 
+%   toSpace = content_transformer( function(x, pattern) gsub(pattern," ",x) )
+%   
+%   
+%   ##Tweet cleaning
+%   
+%   #credit to https://stackoverflow.com/a/31352005/8816204
+%   corp <-tm_map(corp, toSpace, "(RT|via)((?:\\b\\W*@\\w+)+)")
+%   corp <-tm_map(corp, toSpace, "@\\w+")
+%   corp <-tm_map(corp, toSpace, "&amp")
+%   
+%   ##Remove URLS from tweets
+%   corp <-tm_map(corp, toSpace, "httpsw+")
+%   corp <-tm_map(corp, toSpace, "http:\\w+")
+%   corp <-tm_map(corp, toSpace, "https:\\w+")
+% 
+%   corp <-tm_map(corp, toSpace, "[ \t]{2,}")
+%   corp <-tm_map(corp, toSpace, "^\\s+|\\s+$")
+%   
+% 
+%   # ##Remove obvious words /stopwords
+%   if(missing(wholeDataSet)){
+%     corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb")))
+%   } else if(wholeDataSet == TRUE){
+%     corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
+%   }
+% 
+%   #remove punctuation last so urls are removed correctly
+%   corp <- tm_map(corp, removePunctuation)
+%   
+%   if(missing(wordAssocation)){
+%     tdm <- TermDocumentMatrix(corp)
+%     
+%     m <- as.matrix(tdm)
+%     v <- sort(rowSums(m), decreasing = TRUE)
+%     d <- data.frame(word = names(v), freq = v)
+%     d$word <- gsub("˜", " ", d$word) ## Edit 2
+%     
+%     tweets <- d$word
+%   }else if(wordAssocation == TRUE){
+%     dtm <- DocumentTermMatrix(corp)
+%   }
+% }
+% \end{lstlisting}
 
 % Clear the page and starte a new page for references 
 
