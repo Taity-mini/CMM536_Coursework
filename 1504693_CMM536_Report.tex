@@ -654,7 +654,8 @@ To evaluate the module, a confusion matrix is produced by predicting the against
 
 \subsection{Build Stream Classifier}
 
-Same as above. Complete this part as required by the coursework sheet. Again, be clear, visuals always helps in communicating results. Justify your choices and explain your methods. 
+
+
 
 
 \clearpage
@@ -674,7 +675,73 @@ The was first imported:
 \subsection{Preprocessing}
 
 In order to pre-process the leaveRemain tweets, I built a custom corpus function. Which can be found at (Figure~\ref{figbuildCorpus})
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{#Custom Corpus Function for preprocessing  }
 
+buildCorpus <- \hlkwd{function} (tweets, wholeDataSet, wordAssocation)\{
+  corp <- \hlkwd{Corpus}(\hlkwd{VectorSource}(tweets$text))
+  
+  
+  corp <- \hlkwd{tm_map}(corp,
+                 \hlkwd{content_transformer}(\hlkwd{function}(x) \hlkwd{iconv}(x, to=\hlstr{'ASCII'},
+                                                       sub=\hlstr{'byte'})))
+\hlcom{  # remove stop words and other preprocessing}
+ 
+  corp <- \hlkwd{tm_map}(corp, \hlkwd{content_transformer}(tolower))
+  corp <- \hlkwd{tm_map}(corp, removeNumbers)
+
+  toSpace = \hlkwd{content_transformer}( \hlkwd{function}(x, pattern) \hlkwd{gsub}(pattern,\hlstr{" "},x) )
+  
+  
+\hlcom{  ##Tweet cleaning}
+  
+\hlcom{  #credit to https://stackoverflow.com/a/31352005/8816204}
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"(RT|via)((?:\textbackslash{}\textbackslash{}b\textbackslash{}\textbackslash{}W*@\textbackslash{}\textbackslash{}w+)+)"})
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"@\textbackslash{}\textbackslash{}w+"})
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"&amp"})
+  
+\hlcom{  ##Remove URLS from tweets}
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"httpsw+"})
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"http:\textbackslash{}\textbackslash{}w+"})
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"https:\textbackslash{}\textbackslash{}w+"})
+
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"[ \textbackslash{}t]\{2,\}"})
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"^\textbackslash{}\textbackslash{}s+|\textbackslash{}\textbackslash{}s+$"})
+  
+
+\hlcom{  # ##Remove obvious words /stopwords}
+  \hlkwd{if}(\hlkwd{missing}(wholeDataSet))\{
+    corp <- \hlkwd{tm_map}(corp, 
+                   \hlkwd{function}(x)\hlkwd{removeWords}(x,\hlkwd{c}(
+                     \hlkwd{stopwords}(\hlstr{"english"}),\hlstr{"amp"}, \hlstr{"will"}, \hlstr{"\textbackslash{}‰Û_"}, \hlstr{"https"}, \hlstr{"http"}, \hlstr{"httpsdb"})))
+  \} else \hlkwd{if}(wholeDataSet == TRUE)\{
+    corp <- \hlkwd{tm_map}(corp, 
+                   \hlkwd{function}(x)\hlkwd{removeWords}(x,\hlkwd{c}(
+                     \hlkwd{stopwords}(\hlstr{"english"}),\hlstr{"amp"}, \hlstr{"will"}, \hlstr{"\textbackslash{}‰Û_"}, \hlstr{"https"}, \hlstr{"http"}, 
+                     \hlstr{"httpsdb"}, \hlstr{"eu"}, \hlstr{"brexit"}, \hlstr{"rt"}, \hlstr{"leave"}, \hlstr{"remain"}, \hlstr{"vote"})))
+  \}
+
+\hlcom{  #remove punctuation last so urls are removed correctly}
+  corp <- \hlkwd{tm_map}(corp, removePunctuation)
+  
+  \hlkwd{if}(\hlkwd{missing}(wordAssocation))\{
+    tdm <- \hlkwd{TermDocumentMatrix}(corp)
+    
+    m <- \hlkwd{as.matrix}(tdm)
+    v <- \hlkwd{sort}(\hlkwd{rowSums}(m), decreasing = TRUE)
+    d <- \hlkwd{data.frame}(word = \hlkwd{names}(v), freq = v)
+    d$word <- \hlkwd{gsub}(\hlstr{"˜"}, \hlstr{" "}, d$word) ## Edit 2
+    
+    tweets <- d$word
+  \}else \hlkwd{if}(wordAssocation == TRUE)\{
+    dtm <- \hlkwd{DocumentTermMatrix}(corp)
+  \}
+\}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
 
 \clearpage
 
@@ -718,36 +785,36 @@ For the pre-processing in the text-classification task, I created a custom corpu
   commentstyle=\color{YellowGreen},   % comment style
   stringstyle=\color{ForestGreen}      % string literal style
 } 
-% 
+
 % \label{figBuildCorpus}
 % \begin{figure}[H]
 % \caption {Custom buildCorpus function}
 % \end {figure}
 %     \begin{lstlisting}
-%     #Custom Corpus Function for preprocessing  
+%     #Custom Corpus Function for preprocessing
 % 
 % buildCorpus <- function (tweets, wholeDataSet, wordAssocation){
 %   corp <- Corpus(VectorSource(tweets$text))
-%   
-%   
+% 
+% 
 %   corp <- tm_map(corp,
 %                  content_transformer(function(x) iconv(x, to='ASCII',
 %                                                        sub='byte')))
 %   # remove stop words and other preprocessing
-%  
+% 
 %   corp <- tm_map(corp, content_transformer(tolower))
 %   corp <- tm_map(corp, removeNumbers)
 % 
 %   toSpace = content_transformer( function(x, pattern) gsub(pattern," ",x) )
-%   
-%   
+% 
+% 
 %   ##Tweet cleaning
-%   
+% 
 %   #credit to https://stackoverflow.com/a/31352005/8816204
 %   corp <-tm_map(corp, toSpace, "(RT|via)((?:\\b\\W*@\\w+)+)")
 %   corp <-tm_map(corp, toSpace, "@\\w+")
 %   corp <-tm_map(corp, toSpace, "&amp")
-%   
+% 
 %   ##Remove URLS from tweets
 %   corp <-tm_map(corp, toSpace, "httpsw+")
 %   corp <-tm_map(corp, toSpace, "http:\\w+")
@@ -755,26 +822,26 @@ For the pre-processing in the text-classification task, I created a custom corpu
 % 
 %   corp <-tm_map(corp, toSpace, "[ \t]{2,}")
 %   corp <-tm_map(corp, toSpace, "^\\s+|\\s+$")
-%   
+% 
 % 
 %   # ##Remove obvious words /stopwords
 %   if(missing(wholeDataSet)){
-%     corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb")))
+%     corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "\‰Û_", "https", "http", "httpsdb")))
 %   } else if(wholeDataSet == TRUE){
-%     corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
+%     corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "\‰Û_", "https", "http", "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
 %   }
 % 
 %   #remove punctuation last so urls are removed correctly
 %   corp <- tm_map(corp, removePunctuation)
-%   
+% 
 %   if(missing(wordAssocation)){
 %     tdm <- TermDocumentMatrix(corp)
-%     
+% 
 %     m <- as.matrix(tdm)
 %     v <- sort(rowSums(m), decreasing = TRUE)
 %     d <- data.frame(word = names(v), freq = v)
 %     d$word <- gsub("˜", " ", d$word) ## Edit 2
-%     
+% 
 %     tweets <- d$word
 %   }else if(wordAssocation == TRUE){
 %     dtm <- DocumentTermMatrix(corp)

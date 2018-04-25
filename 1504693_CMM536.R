@@ -39,6 +39,13 @@ library(ROCR)
 library(stream)
 library(mlbench)
 library(doParallel)
+library("stream")
+library("streamMOA")
+
+require(data.table)
+require(RMOA)
+require(ROCR)
+require(stream)
 
 
 #Set working directory
@@ -164,16 +171,101 @@ names(mod21.knn)
 predictkNN <- predict(mod21.knn,testing)
 confusionMatrix(predictkNN, testing$class)
 
- RFModel<- train(class~., data=training,
-                           trControl=ctrl,
-                           method="rf",
-                           tuneLength =10,
-                           metric = 'Accuracy')
-
 
 #Data streaming classifer
 
 
+#Pre-processing
+
+#copy the binary adult dataset
+df <- binAdult
+
+#Convert the class to numeric values
+# df$class = lapply(df$class, as.numeric)
+# df$class <- unlist(df$class)
+
+str(df$class)
+
+ctrl <- MOAoptions(model = "OCBoost", randomSeed = 123456789, ensembleSize = 25,
+                   smoothingParameter = 0.5)
+mymodel <- OCBoost(control = ctrl)
+mymodel
 
 
 
+dfStream <-datastream_dataframe(data=as.data.table(df))
+
+chunk <- 100
+turns <- (nrow(dfStream$data)/chunk)-1
+turns <- floor(turns)
+position <- chunk
+
+#first sample (train)##
+
+sample <- dfStream$get_points(dfStream, n =chunk,
+                             outofpoints = c("stop", "warn", "ignore"))
+head(sample,3)
+head(binAdult,3)
+
+str(binAdult$class)
+
+
+##Train the first chunk
+
+myboostedclasifier <- trainMOA(model=mymodel,
+                      formula = class~.,
+                      data = datastream_dataframe(sample))
+
+#Now iterate ove the whole stream
+for (i in 1:turns){
+  #next sample 
+  
+  sample <- dfStream$get_points(dfStream, n =chunk,
+                                outofpoints = c("stop", "warn", "ignore"))
+  
+  #update the trained model with the new chunks
+  myboostedclasifier <- trainMOA(model = myboostedclasifier$model,
+                        formula = class~., 
+                        data = datastream_dataframe(sample),
+                        reset = FALSE, trace=FALSE)
+  
+  cat("chunk: ",i, "\n")
+}
+
+##Do some prediction to test the model
+
+predictions <- predict (myboostedclasifier, sample)
+table(sprintf("Reality: %s", sample$class),
+      sprintf("Predicted: %s", predictions))
+
+confusion.mstream <- confusionMatrix(predictions, sample$class)
+
+cat("Accuracy is: ", confusion.mstream$overall["Accuracy"])
+
+
+
+#Hold results in a vector
+accuracies <- c()
+dfStream$reset()
+
+for(i in 1:turns){
+  #next sample
+  
+  sample <- dfStream$get_points(dfStream, n=chunk,
+                                outofpoints = c("Stop", "warn", "ignore"))
+  predictions <- predict(myboostedclasifier, sample)
+  
+  #caculate accuracy
+  
+  confusion.mstream <- confusionMatrix(predictions, sample$class)
+  accuracies[i] <- confusion.mstream$overall["Accuracy"]
+  
+  cat(accuracies[i],"%","\n")
+  
+}
+
+head(accuracies)
+
+
+plot(accuracies,type='l',col='red',
+     xlab="Chunk Number",ylab="Accuracy",frame=FALSE)
