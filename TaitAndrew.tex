@@ -795,7 +795,6 @@ With all the streaming data now setup, the model can be trained using the 1st ch
 
 
 
-
 Now that first sample has been tested, lets make some predictions
 
 \begin{knitrout}
@@ -818,14 +817,17 @@ Now that first sample has been tested, lets make some predictions
 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-##                 
-##                  Predicted: <=50K Predicted: >50K
-##   Reality: <=50K               78               0
-##   Reality: >50K                16               6
-## Accuracy is:  0.84
-\end{verbatim}
-\end{kframe}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in .jcall("{}RJavaTools"{}, "{}Z"{}, "{}hasField"{}, .jcast(x, "{}java/lang/Object"{}), : java.lang.NullPointerException}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in sprintf("{}Predicted: \%s"{}, predictions): object 'predictions' not found}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in is.factor(x): object 'predictions' not found}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in confusionMatrix(predictions, sample\$class): object 'predictions' not found}}
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in cat("{}Accuracy is: "{}, confusion.mstream\$overall["{}Accuracy"{}]): object 'confusion.mstream' not found}}\end{kframe}
 \end{knitrout}
 
 
@@ -891,7 +893,7 @@ Finnally lets plot the accuracy vs the chunk number
 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-\includegraphics[width=\maxwidth]{figure/unnamed-chunk-66-1} 
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-65-1} 
 
 \end{knitrout}
 
@@ -909,91 +911,285 @@ The was first imported:
 \end{kframe}
 \end{knitrout}
 
+
+
+Then the tweets are split based on the label(leave/remain)
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{#split dataset into leave and remain dataframes}
+\hlstd{tweets} \hlkwb{=} \hlkwd{split}\hlstd{(leaveRemainTweets, leaveRemainTweets}\hlopt{$}\hlstd{label)}
+\hlstd{remainTweets} \hlkwb{=} \hlstd{tweets}\hlopt{$}\hlstd{Remain}
+\hlstd{leaveTweets} \hlkwb{=} \hlstd{tweets}\hlopt{$}\hlstd{Leave}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+
+Next lets check how many leave/remain tweets they are
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{nrow}\hlstd{(remainTweets)}
+\hlkwd{nrow}\hlstd{(leaveTweets)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Number of remain tweets
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+## [1] 1029
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Number of leave tweeets
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+## [1] 1254
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
 \subsection{Preprocessing}
 
 In order to pre-process the leaveRemain tweets, I built a custom corpus function. Which can be found below.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlcom{#Custom Corpus Function for preprocessing  }
+\hlstd{buildCorpus} \hlkwb{<-} \hlkwa{function} \hlstd{(}\hlkwc{tweets}\hlstd{,} \hlkwc{wordCloud}\hlstd{,} \hlkwc{wholeDataSet}\hlstd{,} \hlkwc{wordAssocation}\hlstd{)\{}
 
-buildCorpus <- \hlkwd{function} (tweets, wholeDataSet, wordAssocation)\{
-  corp <- \hlkwd{Corpus}(\hlkwd{VectorSource}(tweets$text))
-  
-  
-  corp <- \hlkwd{tm_map}(corp,
-                 \hlkwd{content_transformer}(\hlkwd{function}(x) \hlkwd{iconv}(x, to=\hlstr{'ASCII'},
-                                                       sub=\hlstr{'byte'})))
-\hlcom{  # remove stop words and other preprocessing}
- 
-  corp <- \hlkwd{tm_map}(corp, \hlkwd{content_transformer}(tolower))
-  corp <- \hlkwd{tm_map}(corp, removeNumbers)
+  \hlcom{#Check the optional parameters are set}
+  \hlstd{wordA} \hlkwb{<-}\hlkwd{hasArg}\hlstd{(wordAssocation)}
+  \hlstd{wds} \hlkwb{<-} \hlkwd{hasArg}\hlstd{(wholeDataSet)}
+  \hlstd{wordc} \hlkwb{<-}  \hlkwd{hasArg}\hlstd{(wordCloud)}
 
-  toSpace = \hlkwd{content_transformer}( \hlkwd{function}(x, pattern) \hlkwd{gsub}(pattern,\hlstr{" "},x) )
-  
-  
-\hlcom{  ##Tweet cleaning}
-  
-\hlcom{  #credit to https://stackoverflow.com/a/31352005/8816204}
-  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"(RT|via)((?:\textbackslash{}\textbackslash{}b\textbackslash{}\textbackslash{}W*@\textbackslash{}\textbackslash{}w+)+)"})
-  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"@\textbackslash{}\textbackslash{}w+"})
-  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"&amp"})
-  
-\hlcom{  ##Remove URLS from tweets}
-  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"httpsw+"})
-  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"http:\textbackslash{}\textbackslash{}w+"})
-  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"https:\textbackslash{}\textbackslash{}w+"})
+  \hlstd{corp} \hlkwb{<-} \hlkwd{Corpus}\hlstd{(}\hlkwd{VectorSource}\hlstd{(tweets}\hlopt{$}\hlstd{text))}
 
-  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"[ \textbackslash{}t]\{2,\}"})
-  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"^\textbackslash{}\textbackslash{}s+|\textbackslash{}\textbackslash{}s+$"})
-  
 
-\hlcom{  # ##Remove obvious words /stopwords}
-  \hlkwd{if}(\hlkwd{missing}(wholeDataSet))\{
-    corp <- \hlkwd{tm_map}(corp, 
-                   \hlkwd{function}(x)\hlkwd{removeWords}(x,\hlkwd{c}(
-                     \hlkwd{stopwords}(\hlstr{"english"}),\hlstr{"amp"}, \hlstr{"will"}, \hlstr{"\textbackslash{}‰Û_"}, \hlstr{"https"}, \hlstr{"http"}, \hlstr{"httpsdb"})))
-  \} else \hlkwd{if}(wholeDataSet == TRUE)\{
-    corp <- \hlkwd{tm_map}(corp, 
-                   \hlkwd{function}(x)\hlkwd{removeWords}(x,\hlkwd{c}(
-                     \hlkwd{stopwords}(\hlstr{"english"}),\hlstr{"amp"}, \hlstr{"will"}, \hlstr{"\textbackslash{}‰Û_"}, \hlstr{"https"}, \hlstr{"http"}, 
-                     \hlstr{"httpsdb"}, \hlstr{"eu"}, \hlstr{"brexit"}, \hlstr{"rt"}, \hlstr{"leave"}, \hlstr{"remain"}, \hlstr{"vote"})))
-  \}
+  \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp,}
+                 \hlkwd{content_transformer}\hlstd{(}\hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)} \hlkwd{iconv}\hlstd{(x,} \hlkwc{to}\hlstd{=}\hlstr{'ASCII'}\hlstd{,}
+                                                       \hlkwc{sub}\hlstd{=}\hlstr{'byte'}\hlstd{)))}
+  \hlcom{# remove stop words and other preprocessing}
 
-\hlcom{  #remove punctuation last so urls are removed correctly}
-  corp <- \hlkwd{tm_map}(corp, removePunctuation)
-  
-  \hlkwd{if}(\hlkwd{missing}(wordAssocation))\{
-    tdm <- \hlkwd{TermDocumentMatrix}(corp)
-    
-    m <- \hlkwd{as.matrix}(tdm)
-    v <- \hlkwd{sort}(\hlkwd{rowSums}(m), decreasing = TRUE)
-    d <- \hlkwd{data.frame}(word = \hlkwd{names}(v), freq = v)
-    d$word <- \hlkwd{gsub}(\hlstr{"˜"}, \hlstr{" "}, d$word) ## Edit 2
-    
-    tweets <- d$word
-  \}else \hlkwd{if}(wordAssocation == TRUE)\{
-    dtm <- \hlkwd{DocumentTermMatrix}(corp)
-  \}
-\}
+  \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp,} \hlkwd{content_transformer}\hlstd{(tolower))}
+  \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp, removeNumbers)}
+
+  \hlstd{toSpace} \hlkwb{=} \hlkwd{content_transformer}\hlstd{(} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{,} \hlkwc{pattern}\hlstd{)} \hlkwd{gsub}\hlstd{(pattern,}\hlstr{" "}\hlstd{,x) )}
+
+
+  \hlcom{##Tweet cleaning}
+
+  \hlcom{#credit to https://stackoverflow.com/a/31352005/8816204}
+  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"(RT|via)((?:\textbackslash{}\textbackslash{}b\textbackslash{}\textbackslash{}W*@\textbackslash{}\textbackslash{}w+)+)"}\hlstd{)}
+  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"@\textbackslash{}\textbackslash{}w+"}\hlstd{)}
+  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"&amp"}\hlstd{)}
+
+  \hlcom{##Remove URLS from tweets}
+  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"httpsw+"}\hlstd{)}
+  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"http:\textbackslash{}\textbackslash{}w+"}\hlstd{)}
+  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"https:\textbackslash{}\textbackslash{}w+"}\hlstd{)}
+
+  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"[ \textbackslash{}t]\{2,\}"}\hlstd{)}
+  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"^\textbackslash{}\textbackslash{}s+|\textbackslash{}\textbackslash{}s+$"}\hlstd{)}
+
+
+  \hlcom{# ##Remove obvious words /stopwords}
+ \hlkwa{if}\hlstd{(wds)\{}
+   \hlkwa{if}\hlstd{(wholeDataSet)\{}
+     \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp,} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)}\hlkwd{removeWords}\hlstd{(x,}\hlkwd{c}\hlstd{(}\hlkwd{stopwords}\hlstd{(}\hlstr{"english"}\hlstd{),}\hlstr{"amp"}\hlstd{,} \hlstr{"will"}\hlstd{,} \hlstr{"‰Û_"}\hlstd{,} \hlstr{"https"}\hlstd{,} \hlstr{"http"}\hlstd{,} \hlstr{"httpsdb"}\hlstd{,} \hlstr{"eu"}\hlstd{,} \hlstr{"brexit"}\hlstd{,} \hlstr{"rt"}\hlstd{,} \hlstr{"leave"}\hlstd{,} \hlstr{"remain"}\hlstd{,} \hlstr{"vote"}\hlstd{)))}
+   \hlstd{\}}
+  \hlstd{\}} \hlkwa{else}\hlstd{\{}
+    \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp,} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)}\hlkwd{removeWords}\hlstd{(x,}\hlkwd{c}\hlstd{(}\hlkwd{stopwords}\hlstd{(}\hlstr{"english"}\hlstd{),}\hlstr{"amp"}\hlstd{,} \hlstr{"will"}\hlstd{,} \hlstr{"‰Û_"}\hlstd{,} \hlstr{"https"}\hlstd{,} \hlstr{"http"}\hlstd{,} \hlstr{"httpsdb"}\hlstd{)))}
+\hlstd{\}}
+
+
+
+  \hlcom{#remove punctuation last so urls are removed correctly}
+  \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp, removePunctuation)}
+
+  \hlcom{#If wordAssocation is true then create document term matrix}
+  \hlkwa{if}\hlstd{(wordA)\{}
+    \hlkwa{if}\hlstd{(wordAssocation)\{}
+      \hlstd{dtm} \hlkwb{<-} \hlkwd{DocumentTermMatrix}\hlstd{(corp)}
+    \hlstd{\}}
+  \hlstd{\}}\hlkwa{else if}\hlstd{(}\hlopt{!}\hlstd{wordA)\{} \hlcom{# If no  wordAssocation then create TermDocument Matrix}
+    \hlstd{tdm} \hlkwb{<-} \hlkwd{TermDocumentMatrix}\hlstd{(corp)}
+
+    \hlstd{m} \hlkwb{<-} \hlkwd{as.matrix}\hlstd{(tdm)}
+    \hlstd{v} \hlkwb{<-} \hlkwd{sort}\hlstd{(}\hlkwd{rowSums}\hlstd{(m),} \hlkwc{decreasing} \hlstd{=} \hlnum{TRUE}\hlstd{)}
+    \hlstd{d} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{word} \hlstd{=} \hlkwd{names}\hlstd{(v),} \hlkwc{freq} \hlstd{= v)}
+    \hlstd{d}\hlopt{$}\hlstd{word} \hlkwb{<-} \hlkwd{gsub}\hlstd{(}\hlstr{"˜"}\hlstd{,} \hlstr{" "}\hlstd{, d}\hlopt{$}\hlstd{word)} \hlcom{## Edit 2}
+
+
+    \hlkwa{if}\hlstd{(wordc)\{}
+      \hlkwa{if}\hlstd{(wds)\{}
+        \hlstd{tweets} \hlkwb{<-} \hlstd{d}\hlopt{$}\hlstd{word}
+      \hlstd{\}} \hlkwa{else}\hlstd{\{}
+        \hlstd{tweets} \hlkwb{<-} \hlstd{d}\hlopt{$}\hlstd{word}
+        \hlkwa{if}\hlstd{(wordCloud)\{}
+          \hlkwd{wordcloud}\hlstd{(}\hlkwc{words} \hlstd{=tweets,} \hlkwc{freq} \hlstd{= d}\hlopt{$}\hlstd{freq,} \hlkwc{min.freq} \hlstd{=} \hlnum{3}\hlstd{,}
+                    \hlkwc{max.words}\hlstd{=}\hlnum{2000}\hlstd{,} \hlkwc{random.order}\hlstd{=}\hlnum{FALSE}\hlstd{,} \hlkwc{rot.per}\hlstd{=}\hlnum{0.2}\hlstd{,}
+                    \hlkwc{colors}\hlstd{=}\hlkwd{brewer.pal}\hlstd{(}\hlnum{8}\hlstd{,} \hlstr{"Dark2"}\hlstd{))}
+        \hlstd{\}}
+      \hlstd{\}}
+
+    \hlstd{\}}
+
+  \hlstd{\}}
+
+\hlstd{\}}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
+
+
+
+By using the buildCorpus function with the word cloud parameter set to TRUE, it will create a word cloud for us. 
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{leaveWordCloud} \hlkwb{<-} \hlkwd{buildCorpus}\hlstd{(leaveTweets,}\hlnum{TRUE}\hlstd{)}
+
+\hlstd{remainWordCloud} \hlkwb{<-} \hlkwd{buildCorpus}\hlstd{(remainTweets,}\hlnum{TRUE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{figure}[H]
+\begin{center}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+\includegraphics[width=.80\linewidth]{figure/unnamed-chunk-76-1} 
+
+\end{knitrout}
+\caption {Word cloud of leave tweets}
+\label{fig2}
+\end {center}
+\end {figure}
+
+
+\begin{figure}[H]
+\begin{center}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+\includegraphics[width=.80\linewidth]{figure/unnamed-chunk-77-1} 
+
+\end{knitrout}
+\caption {Word cloud of Remain tweets}
+\label{fig3}
+\end {center}
+\end {figure}
+
 
 \clearpage
 
 \subsection{Text Analysis}
 
+To find the most frequent word in the collection of tweets, the whole leaveRemainTweets dataframe was based into the buildCorpus function with the wordCloud option set to FALSE and wholedataset option set to TRUE.
 
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{#Get Most frequent word}
+\hlstd{tweetWordCloud} \hlkwb{<-}\hlkwd{buildCorpus}\hlstd{(leaveRemainTweets,} \hlnum{FALSE}\hlstd{,} \hlnum{TRUE}\hlstd{)}
+\hlkwd{head}\hlstd{(tweetWordCloud,}\hlnum{1}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+## [1] "voteleave"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
 
 \clearpage
 
 \subsection{Text Classification}
 
-Use one of the ‘R’ packages to build a classifier that classifies the tweets as leave tweet or remain tweets. 
+\subsubsection{Most Frequent word in Tweet Collection}
 
-Complete this part as required by the coursework sheet. Again, be clear, visuals always helps in communicating results. Justify your choices and explain your methods. 
+To find the most frequent word in the collection of tweets, the whole leaveRemainTweets dataframe was based into the buildCorpus function with the wordCloud option set to FALSE and wholedataset option set to TRUE.
 
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{#Get Most frequent word}
+\hlstd{tweetWordCloud} \hlkwb{<-}\hlkwd{buildCorpus}\hlstd{(leaveRemainTweets,} \hlnum{FALSE}\hlstd{,} \hlnum{TRUE}\hlstd{)}
+\hlkwd{head}\hlstd{(tweetWordCloud,}\hlnum{1}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+## [1] "voteleave"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+\subsubsection{Word Association}
+
+
+To find out which words appear together often, I used the buildCorpus function to return a termDocumentMatrix. The most frequent terms with a lowfreq value of 50 is also created.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{wordAssoication} \hlkwb{<-} \hlkwd{buildCorpus}\hlstd{(leaveRemainTweets,}\hlnum{FALSE}\hlstd{,}\hlnum{TRUE}\hlstd{,}\hlnum{TRUE}\hlstd{)}
+\hlstd{freq.terms} \hlkwb{<-} \hlkwd{findFreqTerms}\hlstd{(wordAssoication,} \hlkwc{lowfreq} \hlstd{=}\hlnum{50}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+
+
+
+Lets inspect the top 30 most frequent words in the tweet collection
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{head}\hlstd{(freq.terms,}\hlnum{30}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+##  [1] "strongerin"   "voteleave"    "referendum"   "tdb"         
+##  [5] "boris"        "says"         "leaveeu"      "like"        
+##  [9] "tcodb"        "want"         "europe"       "get"         
+## [13] "britain"      "know"         "imagine"      "june"        
+## [17] "now"          "euref"        "eureferendum" "think"       
+## [21] "can"          "campaign"     "voteremain"   "debate"      
+## [25] "farage"       "just"         "must"         "people"      
+## [29] "european"     "good"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Now to plot the word association (term document matrix) against the frequent terms.
+
+
+
+\subsubsection{Most Frequent Words in Both Leave \& Remain Tweets}
 
 \clearpage
 
