@@ -58,9 +58,9 @@ buildCorpus <- function (tweets, wholeDataSet, wordAssocation){
 
   # ##Remove obvious words /stopwords
   if(missing(wholeDataSet)){
-    corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "\‰Û_", "https", "http", "httpsdb")))
+    corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb")))
   } else if(wholeDataSet == TRUE){
-    corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "\‰Û_", "https", "http", "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
+    corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
   }
 
   #remove punctuation last so urls are removed correctly

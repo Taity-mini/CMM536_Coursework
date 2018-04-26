@@ -179,18 +179,14 @@ To start off I will clear the RStudio environment and import the required libari
 \hlkwd{library}\hlstd{(RMOA)}
 \hlkwd{library}\hlstd{(ROCR)}
 \hlkwd{library}\hlstd{(tm)}
+\hlkwd{library}\hlstd{(wordcloud)}
 \hlkwd{library}\hlstd{(wordcloud,}\hlkwc{quietly}\hlstd{=}\hlnum{TRUE}\hlstd{)}
 \hlkwd{library}\hlstd{(RColorBrewer,}\hlkwc{quietly}\hlstd{=}\hlnum{TRUE}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{FALSE Error in library(tm): there is no package called 'tm'}}\end{kframe}
-\end{knitrout}
 
 Then set the working directory to the coursework folder
 
@@ -598,7 +594,7 @@ Once the knn Model is complete, it’s time to analyse the results, first with a
 ## Resampling results:
 ## 
 ##   Accuracy   Kappa    
-##   0.8387279  0.5598352
+##   0.8361309  0.5541515
 ## 
 ## Tuning parameter 'k' was held constant at a value of 3
 \end{verbatim}
@@ -629,25 +625,25 @@ To evaluate the module, a confusion matrix is produced by predicting the against
 ## 
 ##           Reference
 ## Prediction <=50K  >50K
-##      <=50K 17074  1457
-##      >50K   1050  4550
+##      <=50K 17026  1477
+##      >50K   1098  4530
 ##                                           
-##                Accuracy : 0.8961          
-##                  95% CI : (0.8922, 0.8999)
+##                Accuracy : 0.8933          
+##                  95% CI : (0.8893, 0.8972)
 ##     No Information Rate : 0.7511          
 ##     P-Value [Acc > NIR] : < 2.2e-16       
 ##                                           
-##                   Kappa : 0.7157          
-##  Mcnemar's Test P-Value : 5.118e-16       
+##                   Kappa : 0.7085          
+##  Mcnemar's Test P-Value : 9.399e-14       
 ##                                           
-##             Sensitivity : 0.9421          
-##             Specificity : 0.7574          
-##          Pos Pred Value : 0.9214          
-##          Neg Pred Value : 0.8125          
+##             Sensitivity : 0.9394          
+##             Specificity : 0.7541          
+##          Pos Pred Value : 0.9202          
+##          Neg Pred Value : 0.8049          
 ##              Prevalence : 0.7511          
-##          Detection Rate : 0.7076          
-##    Detection Prevalence : 0.7679          
-##       Balanced Accuracy : 0.8498          
+##          Detection Rate : 0.7056          
+##    Detection Prevalence : 0.7668          
+##       Balanced Accuracy : 0.8468          
 ##                                           
 ##        'Positive' Class : <=50K           
 ## 
@@ -806,10 +802,13 @@ Now that first sample has been tested, lets make some predictions
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlcom{##Do some prediction to test the model}
-\hlstd{predictions} \hlkwb{<-} \hlkwd{predict} \hlstd{(myboostedclasifier, sample)}
+
+\hlstd{predictions} \hlkwb{<-} \hlkwd{predict}\hlstd{(myboostedclasifier, sample)}
 \hlkwd{table}\hlstd{(}\hlkwd{sprintf}\hlstd{(}\hlstr{"Reality: %s"}\hlstd{, sample}\hlopt{$}\hlstd{class),}
       \hlkwd{sprintf}\hlstd{(}\hlstr{"Predicted: %s"}\hlstd{, predictions))}
 
+
+\hlstd{predictions} \hlkwb{<-} \hlkwd{as.factor}\hlstd{(predictions)}
 \hlstd{confusion.mstream} \hlkwb{<-} \hlkwd{confusionMatrix}\hlstd{(predictions, sample}\hlopt{$}\hlstd{class)}
 
 \hlkwd{cat}\hlstd{(}\hlstr{"Accuracy is: "}\hlstd{, confusion.mstream}\hlopt{$}\hlstd{overall[}\hlstr{"Accuracy"}\hlstd{])}
@@ -817,25 +816,91 @@ Now that first sample has been tested, lets make some predictions
 \end{kframe}
 \end{knitrout}
 
-
-
-With a sample of the data stream tested, lets do the same with the whole stream.
-
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error: `data` and `reference` should be factors with the same levels.}}\end{kframe}
+\begin{verbatim}
+##                 
+##                  Predicted: <=50K Predicted: >50K
+##   Reality: <=50K               78               0
+##   Reality: >50K                16               6
+## Accuracy is:  0.84
+\end{verbatim}
+\end{kframe}
 \end{knitrout}
 
 
+With a sample of the data stream tested, lets do the same with the whole stream.
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{#Hold results in a vector}
+\hlstd{accuracies} \hlkwb{<-} \hlkwd{c}\hlstd{()}
+\hlstd{dfStream}\hlopt{$}\hlkwd{reset}\hlstd{()}
+
+\hlkwa{for}\hlstd{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hlstd{turns)\{}
+  \hlcom{#next sample}
+
+  \hlstd{sample} \hlkwb{<-} \hlstd{dfStream}\hlopt{$}\hlkwd{get_points}\hlstd{(dfStream,} \hlkwc{n}\hlstd{=chunk,}
+                                \hlkwc{outofpoints} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"Stop"}\hlstd{,} \hlstr{"warn"}\hlstd{,} \hlstr{"ignore"}\hlstd{))}
+  \hlstd{predictions} \hlkwb{<-} \hlkwd{predict}\hlstd{(myboostedclasifier, sample)}
+  \hlcom{#Convert predictions to a factor so it will work with confusion matrix}
+  \hlstd{predictions} \hlkwb{<-} \hlkwd{as.factor}\hlstd{(predictions)}
+
+  \hlcom{#caculate accuracy}
+  \hlstd{confusion.mstream} \hlkwb{<-} \hlkwd{confusionMatrix}\hlstd{(predictions, sample}\hlopt{$}\hlstd{class)}
+  \hlstd{accuracies[i]} \hlkwb{<-} \hlstd{confusion.mstream}\hlopt{$}\hlstd{overall[}\hlstr{"Accuracy"}\hlstd{]}
+
+  \hlkwd{cat}\hlstd{(accuracies[i],}\hlstr{"%"}\hlstd{,}\hlstr{"\textbackslash{}n"}\hlstd{)}
+
+\hlstd{\}}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+
+
+Check the head of the accuracies 
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{head}\hlstd{(accuracies)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+## [1] 0.8181818 0.8300000 0.8300000 0.8400000 0.8300000 0.8300000
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Finnally lets plot the accuracy vs the chunk number
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{plot}\hlstd{(accuracies,}\hlkwc{type}\hlstd{=}\hlstr{'l'}\hlstd{,}\hlkwc{col}\hlstd{=}\hlstr{'red'}\hlstd{,}
+     \hlkwc{xlab}\hlstd{=}\hlstr{"Chunk Number"}\hlstd{,}\hlkwc{ylab}\hlstd{=}\hlstr{"Accuracy"}\hlstd{,}\hlkwc{frame}\hlstd{=}\hlnum{FALSE}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-66-1} 
+
+\end{knitrout}
 
 \clearpage
 
 \section {Text Classification}
 For this task a csv of leave/remain tweets of the brexit campaign was provided.
 
-The tweets csv was first imported:
+The was first imported:
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -844,249 +909,80 @@ The tweets csv was first imported:
 \end{kframe}
 \end{knitrout}
 
-
-
-
-Then the tweets are split based on the label(leave/remain)
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{#split dataset into leave and remain dataframes}
-\hlstd{tweets} \hlkwb{=} \hlkwd{split}\hlstd{(leaveRemainTweets, leaveRemainTweets}\hlopt{$}\hlstd{label)}
-\hlstd{remainTweets} \hlkwb{=} \hlstd{tweets}\hlopt{$}\hlstd{Remain}
-\hlstd{leaveTweets} \hlkwb{=} \hlstd{tweets}\hlopt{$}\hlstd{Leave}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-
-
-Next lets check how many leave/remain tweets they are
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlkwd{nrow}\hlstd{(remainTweets)}
-\hlkwd{nrow}\hlstd{(leaveTweets)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-Number of remain tweets
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-## [1] 1029
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-Number of leave tweeets
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-## [1] 1254
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-
-
 \subsection{Preprocessing}
 
 In order to pre-process the leaveRemain tweets, I built a custom corpus function. Which can be found below.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{buildCorpus} \hlkwb{<-} \hlkwa{function} \hlstd{(}\hlkwc{tweets}\hlstd{,} \hlkwc{wordCloud}\hlstd{,} \hlkwc{wholeDataSet}\hlstd{,} \hlkwc{wordAssocation}\hlstd{)\{}
+\hlcom{#Custom Corpus Function for preprocessing  }
 
-  \hlcom{#Check the optional parameters are set}
-  \hlstd{wordA} \hlkwb{<-}\hlkwd{hasArg}\hlstd{(wordAssocation)}
-  \hlstd{wds} \hlkwb{<-} \hlkwd{hasArg}\hlstd{(wholeDataSet)}
-  \hlstd{wordc} \hlkwb{<-}  \hlkwd{hasArg}\hlstd{(wordCloud)}
+buildCorpus <- \hlkwd{function} (tweets, wholeDataSet, wordAssocation)\{
+  corp <- \hlkwd{Corpus}(\hlkwd{VectorSource}(tweets$text))
+  
+  
+  corp <- \hlkwd{tm_map}(corp,
+                 \hlkwd{content_transformer}(\hlkwd{function}(x) \hlkwd{iconv}(x, to=\hlstr{'ASCII'},
+                                                       sub=\hlstr{'byte'})))
+\hlcom{  # remove stop words and other preprocessing}
+ 
+  corp <- \hlkwd{tm_map}(corp, \hlkwd{content_transformer}(tolower))
+  corp <- \hlkwd{tm_map}(corp, removeNumbers)
 
-  \hlstd{corp} \hlkwb{<-} \hlkwd{Corpus}\hlstd{(}\hlkwd{VectorSource}\hlstd{(tweets}\hlopt{$}\hlstd{text))}
+  toSpace = \hlkwd{content_transformer}( \hlkwd{function}(x, pattern) \hlkwd{gsub}(pattern,\hlstr{" "},x) )
+  
+  
+\hlcom{  ##Tweet cleaning}
+  
+\hlcom{  #credit to https://stackoverflow.com/a/31352005/8816204}
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"(RT|via)((?:\textbackslash{}\textbackslash{}b\textbackslash{}\textbackslash{}W*@\textbackslash{}\textbackslash{}w+)+)"})
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"@\textbackslash{}\textbackslash{}w+"})
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"&amp"})
+  
+\hlcom{  ##Remove URLS from tweets}
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"httpsw+"})
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"http:\textbackslash{}\textbackslash{}w+"})
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"https:\textbackslash{}\textbackslash{}w+"})
 
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"[ \textbackslash{}t]\{2,\}"})
+  corp <-\hlkwd{tm_map}(corp, toSpace, \hlstr{"^\textbackslash{}\textbackslash{}s+|\textbackslash{}\textbackslash{}s+$"})
+  
 
-  \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp,}
-                 \hlkwd{content_transformer}\hlstd{(}\hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)} \hlkwd{iconv}\hlstd{(x,} \hlkwc{to}\hlstd{=}\hlstr{'ASCII'}\hlstd{,}
-                                                       \hlkwc{sub}\hlstd{=}\hlstr{'byte'}\hlstd{)))}
-  \hlcom{# remove stop words and other preprocessing}
+\hlcom{  # ##Remove obvious words /stopwords}
+  \hlkwd{if}(\hlkwd{missing}(wholeDataSet))\{
+    corp <- \hlkwd{tm_map}(corp, 
+                   \hlkwd{function}(x)\hlkwd{removeWords}(x,\hlkwd{c}(
+                     \hlkwd{stopwords}(\hlstr{"english"}),\hlstr{"amp"}, \hlstr{"will"}, \hlstr{"\textbackslash{}‰Û_"}, \hlstr{"https"}, \hlstr{"http"}, \hlstr{"httpsdb"})))
+  \} else \hlkwd{if}(wholeDataSet == TRUE)\{
+    corp <- \hlkwd{tm_map}(corp, 
+                   \hlkwd{function}(x)\hlkwd{removeWords}(x,\hlkwd{c}(
+                     \hlkwd{stopwords}(\hlstr{"english"}),\hlstr{"amp"}, \hlstr{"will"}, \hlstr{"\textbackslash{}‰Û_"}, \hlstr{"https"}, \hlstr{"http"}, 
+                     \hlstr{"httpsdb"}, \hlstr{"eu"}, \hlstr{"brexit"}, \hlstr{"rt"}, \hlstr{"leave"}, \hlstr{"remain"}, \hlstr{"vote"})))
+  \}
 
-  \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp,} \hlkwd{content_transformer}\hlstd{(tolower))}
-  \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp, removeNumbers)}
-
-  \hlstd{toSpace} \hlkwb{=} \hlkwd{content_transformer}\hlstd{(} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{,} \hlkwc{pattern}\hlstd{)} \hlkwd{gsub}\hlstd{(pattern,}\hlstr{" "}\hlstd{,x) )}
-
-
-  \hlcom{##Tweet cleaning}
-
-  \hlcom{#credit to https://stackoverflow.com/a/31352005/8816204}
-  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"(RT|via)((?:\textbackslash{}\textbackslash{}b\textbackslash{}\textbackslash{}W*@\textbackslash{}\textbackslash{}w+)+)"}\hlstd{)}
-  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"@\textbackslash{}\textbackslash{}w+"}\hlstd{)}
-  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"&amp"}\hlstd{)}
-
-  \hlcom{##Remove URLS from tweets}
-  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"httpsw+"}\hlstd{)}
-  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"http:\textbackslash{}\textbackslash{}w+"}\hlstd{)}
-  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"https:\textbackslash{}\textbackslash{}w+"}\hlstd{)}
-
-  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"[ \textbackslash{}t]\{2,\}"}\hlstd{)}
-  \hlstd{corp} \hlkwb{<-}\hlkwd{tm_map}\hlstd{(corp, toSpace,} \hlstr{"^\textbackslash{}\textbackslash{}s+|\textbackslash{}\textbackslash{}s+$"}\hlstd{)}
-
-
-  \hlcom{# ##Remove obvious words /stopwords}
- \hlkwa{if}\hlstd{(wds)\{}
-   \hlkwa{if}\hlstd{(wholeDataSet)\{}
-     \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp,} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)}\hlkwd{removeWords}\hlstd{(x,}\hlkwd{c}\hlstd{(}\hlkwd{stopwords}\hlstd{(}\hlstr{"english"}\hlstd{),}\hlstr{"amp"}\hlstd{,} \hlstr{"will"}\hlstd{,} \hlstr{"‰Û_"}\hlstd{,} \hlstr{"https"}\hlstd{,} \hlstr{"http"}\hlstd{,} \hlstr{"httpsdb"}\hlstd{,} \hlstr{"eu"}\hlstd{,} \hlstr{"brexit"}\hlstd{,} \hlstr{"rt"}\hlstd{,} \hlstr{"leave"}\hlstd{,} \hlstr{"remain"}\hlstd{,} \hlstr{"vote"}\hlstd{)))}
-   \hlstd{\}}
-  \hlstd{\}} \hlkwa{else}\hlstd{\{}
-    \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp,} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)}\hlkwd{removeWords}\hlstd{(x,}\hlkwd{c}\hlstd{(}\hlkwd{stopwords}\hlstd{(}\hlstr{"english"}\hlstd{),}\hlstr{"amp"}\hlstd{,} \hlstr{"will"}\hlstd{,} \hlstr{"‰Û_"}\hlstd{,} \hlstr{"https"}\hlstd{,} \hlstr{"http"}\hlstd{,} \hlstr{"httpsdb"}\hlstd{)))}
-\hlstd{\}}
-
-
-
-  \hlcom{#remove punctuation last so urls are removed correctly}
-  \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp, removePunctuation)}
-
-  \hlcom{#If wordAssocation is true then create document term matrix}
-  \hlkwa{if}\hlstd{(wordA)\{}
-    \hlkwa{if}\hlstd{(wordAssocation)\{}
-      \hlstd{dtm} \hlkwb{<-} \hlkwd{DocumentTermMatrix}\hlstd{(corp)}
-    \hlstd{\}}
-  \hlstd{\}}\hlkwa{else if}\hlstd{(}\hlopt{!}\hlstd{wordA)\{} \hlcom{# If no  wordAssocation then create TermDocument Matrix}
-    \hlstd{tdm} \hlkwb{<-} \hlkwd{TermDocumentMatrix}\hlstd{(corp)}
-
-    \hlstd{m} \hlkwb{<-} \hlkwd{as.matrix}\hlstd{(tdm)}
-    \hlstd{v} \hlkwb{<-} \hlkwd{sort}\hlstd{(}\hlkwd{rowSums}\hlstd{(m),} \hlkwc{decreasing} \hlstd{=} \hlnum{TRUE}\hlstd{)}
-    \hlstd{d} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{word} \hlstd{=} \hlkwd{names}\hlstd{(v),} \hlkwc{freq} \hlstd{= v)}
-    \hlstd{d}\hlopt{$}\hlstd{word} \hlkwb{<-} \hlkwd{gsub}\hlstd{(}\hlstr{"˜"}\hlstd{,} \hlstr{" "}\hlstd{, d}\hlopt{$}\hlstd{word)} \hlcom{## Edit 2}
-
-
-    \hlkwa{if}\hlstd{(wordc)\{}
-      \hlkwa{if}\hlstd{(wds)\{}
-        \hlstd{tweets} \hlkwb{<-} \hlstd{d}\hlopt{$}\hlstd{word}
-      \hlstd{\}} \hlkwa{else}\hlstd{\{}
-        \hlstd{tweets} \hlkwb{<-} \hlstd{d}\hlopt{$}\hlstd{word}
-        \hlkwa{if}\hlstd{(wordCloud)\{}
-          \hlkwd{wordcloud}\hlstd{(}\hlkwc{words} \hlstd{=tweets,} \hlkwc{freq} \hlstd{= d}\hlopt{$}\hlstd{freq,} \hlkwc{min.freq} \hlstd{=} \hlnum{3}\hlstd{,}
-                    \hlkwc{max.words}\hlstd{=}\hlnum{2000}\hlstd{,} \hlkwc{random.order}\hlstd{=}\hlnum{FALSE}\hlstd{,} \hlkwc{rot.per}\hlstd{=}\hlnum{0.2}\hlstd{,}
-                    \hlkwc{colors}\hlstd{=}\hlkwd{brewer.pal}\hlstd{(}\hlnum{8}\hlstd{,} \hlstr{"Dark2"}\hlstd{))}
-        \hlstd{\}}
-      \hlstd{\}}
-
-    \hlstd{\}}
-
-  \hlstd{\}}
-
-\hlstd{\}}
+\hlcom{  #remove punctuation last so urls are removed correctly}
+  corp <- \hlkwd{tm_map}(corp, removePunctuation)
+  
+  \hlkwd{if}(\hlkwd{missing}(wordAssocation))\{
+    tdm <- \hlkwd{TermDocumentMatrix}(corp)
+    
+    m <- \hlkwd{as.matrix}(tdm)
+    v <- \hlkwd{sort}(\hlkwd{rowSums}(m), decreasing = TRUE)
+    d <- \hlkwd{data.frame}(word = \hlkwd{names}(v), freq = v)
+    d$word <- \hlkwd{gsub}(\hlstr{"˜"}, \hlstr{" "}, d$word) ## Edit 2
+    
+    tweets <- d$word
+  \}else \hlkwd{if}(wordAssocation == TRUE)\{
+    dtm <- \hlkwd{DocumentTermMatrix}(corp)
+  \}
+\}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
-
-
-
-
-By using the buildCorpus function with the word cloud parameter set to TRUE, it will create a word cloud for us. 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{leaveWordCloud} \hlkwb{<-} \hlkwd{buildCorpus}\hlstd{(leaveTweets,}\hlnum{TRUE}\hlstd{)}
-
-\hlstd{remainWordCloud} \hlkwb{<-} \hlkwd{buildCorpus}\hlstd{(remainTweets,}\hlnum{TRUE}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-\begin{figure}[H]
-\begin{center}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in Corpus(VectorSource(tweets\$text)): could not find function "{}Corpus"{}}}\end{kframe}
-\end{knitrout}
-\caption {Word cloud of leave tweets}
-\label{fig2}
-\end {center}
-\end {figure}
-
-
-\begin{figure}[H]
-\begin{center}
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in Corpus(VectorSource(tweets\$text)): could not find function "{}Corpus"{}}}\end{kframe}
-\end{knitrout}
-\caption {Word cloud of Remain tweets}
-\label{fig3}
-\end {center}
-\end {figure}
-
-
 
 \clearpage
 
 \subsection{Text Analysis}
-
-\subsubsection{Most Frequent word in Tweet Collection}
-
-To find the most frequent word in the collection of tweets, the whole leaveRemainTweets dataframe was based into the buildCorpus function with the wordCloud option set to FALSE and wholedataset option set to TRUE.
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlcom{#Get Most frequent word}
-\hlstd{tweetWordCloud} \hlkwb{<-}\hlkwd{buildCorpus}\hlstd{(leaveRemainTweets,} \hlnum{FALSE}\hlstd{,} \hlnum{TRUE}\hlstd{)}
-\hlkwd{head}\hlstd{(tweetWordCloud,}\hlnum{1}\hlstd{)}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
-
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in Corpus(VectorSource(tweets\$text)): could not find function "{}Corpus"{}}}
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in head(tweetWordCloud, 1): object 'tweetWordCloud' not found}}\end{kframe}
-\end{knitrout}
-
-% \subsubsection{Word Association}
-% 
-% 
-% To find out which words appear together often, I used the buildCorpus function to return a termDocumentMatrix. The most frequent terms with a lowfreq value of 50 is also created.
-% 
-% <<warning=FALSE,eval=FALSE,comment=TRUE>>==
-% wordAssoication <- buildCorpus(leaveRemainTweets,FALSE,TRUE,TRUE)
-% freq.terms <- findFreqTerms(wordAssoication, lowfreq =50)
-% @
-% 
-% 
-% <<warning=FALSE,echo=FALSE, cache=TRUE>>==
-% wordAssoication <- buildCorpus(leaveRemainTweets,FALSE,TRUE,TRUE)
-% freq.terms <- findFreqTerms(wordAssoication, lowfreq =50)
-% @
-% 
-% 
-% Lets inspect the top 30 most frequent words in the tweet collection
-% 
-% 
-% <<warning=FALSE,eval=FALSE,comment=TRUE>>==
-% head(freq.terms,30)
-% @
-% 
-% <<warning=FALSE,echo=FALSE, cache=TRUE>>==
-% head(freq.terms,30)
-% @
-% 
-% Now to plot the word association (term document matrix) against the frequent terms.
-% 
-
-
-\subsubsection{Most Frequent Words in Both Leave \& Remain Tweets}
 
 
 

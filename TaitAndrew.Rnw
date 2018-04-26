@@ -128,11 +128,13 @@ library(e1071)
 library(RMOA)
 library(ROCR)
 library(tm)
+library(wordcloud)
 library(wordcloud,quietly=TRUE)
 library(RColorBrewer,quietly=TRUE)
 @
 
 <<warning=FALSE,echo=FALSE, comment=FALSE, message=FALSE>>==
+
 #Import librarys
 library(caret)
 library(partykit)
@@ -151,9 +153,9 @@ library(e1071)
 library(RMOA)
 library(ROCR)
 library(tm)
+library(wordcloud)
 library(wordcloud,quietly=TRUE)
 library(RColorBrewer,quietly=TRUE)
-
 @
 
 Then set the working directory to the coursework folder
@@ -605,15 +607,13 @@ for (i in 1:turns){
 }
 @
 
+
 <<warning=FALSE,echo=FALSE, cache=TRUE>>==
 ##Train the first chunk
-
 myboostedclasifier <- trainMOA(model=mymodel,
                       formula = class~.,
                       data = datastream_dataframe(sample))
-@
 
-<<warning=FALSE,echo=FALSE, cache=TRUE>>==
 #Now iterate ove the whole stream
 for (i in 1:turns){
   #next sample 
@@ -634,18 +634,57 @@ Now that first sample has been tested, lets make some predictions
 
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
 ##Do some prediction to test the model
-predictions <- predict (myboostedclasifier, sample)
+
+predictions <- predict(myboostedclasifier, sample)
 table(sprintf("Reality: %s", sample$class),
       sprintf("Predicted: %s", predictions))
 
+
+predictions <- as.factor(predictions)
+confusion.mstream <- confusionMatrix(predictions, sample$class)
+
+cat("Accuracy is: ", confusion.mstream$overall["Accuracy"])
+@
+
+<<warning=FALSE,echo=FALSE>>==
+##Do some prediction to test the model
+
+predictions <- predict(myboostedclasifier, sample)
+table(sprintf("Reality: %s", sample$class),
+      sprintf("Predicted: %s", predictions))
+
+#Convert predictions to a factor so it will work with confusion matrix
+predictions <- as.factor(predictions)
 confusion.mstream <- confusionMatrix(predictions, sample$class)
 
 cat("Accuracy is: ", confusion.mstream$overall["Accuracy"])
 @
 
 
-
 With a sample of the data stream tested, lets do the same with the whole stream.
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#Hold results in a vector
+accuracies <- c()
+dfStream$reset()
+
+for(i in 1:turns){
+  #next sample
+  
+  sample <- dfStream$get_points(dfStream, n=chunk,
+                                outofpoints = c("Stop", "warn", "ignore"))
+  predictions <- predict(myboostedclasifier, sample)
+  #Convert predictions to a factor so it will work with confusion matrix
+  predictions <- as.factor(predictions)
+  
+  #caculate accuracy
+  confusion.mstream <- confusionMatrix(predictions, sample$class)
+  accuracies[i] <- confusion.mstream$overall["Accuracy"]
+  
+  cat(accuracies[i],"%","\n")
+  
+}
+@
+
 
 <<warning=FALSE,echo=FALSE, cache=TRUE, Message=FALSE>>==
 #Hold results in a vector
@@ -658,166 +697,57 @@ for(i in 1:turns){
   sample <- dfStream$get_points(dfStream, n=chunk,
                                 outofpoints = c("Stop", "warn", "ignore"))
   predictions <- predict(myboostedclasifier, sample)
+  #Convert predictions to a factor so it will work with confusion matrix
+  predictions <- as.factor(predictions)
   
   #caculate accuracy
-  
   confusion.mstream <- confusionMatrix(predictions, sample$class)
   accuracies[i] <- confusion.mstream$overall["Accuracy"]
-  
-  cat(accuracies[i],"%","\n")
   
 }
 @
 
+Check the head of the accuracies 
 
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+head(accuracies)
+
+@
+<<warning=FALSE,echo=FALSE>>==
+head(accuracies)
+
+@
+
+Finnally lets plot the accuracy vs the chunk number
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+plot(accuracies,type='l',col='red',
+     xlab="Chunk Number",ylab="Accuracy",frame=FALSE)
+@
+
+
+<<warning=FALSE,echo=FALSE>>==
+plot(accuracies,type='l',col='red',
+     xlab="Chunk Number",ylab="Accuracy",frame=FALSE)
+@
 
 \clearpage
 
 \section {Text Classification}
 For this task a csv of leave/remain tweets of the brexit campaign was provided.
 
-The tweets csv was first imported:
+The was first imported:
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
 leaveRemainTweets <- read.csv("data/leaveRemainTweets_CW.csv", header=TRUE)
 @
-
-<<warning=FALSE,echo=FALSE, cache=TRUE>>==
-leaveRemainTweets <- read.csv("data/leaveRemainTweets_CW.csv", header=TRUE)
-@
-
-
-Then the tweets are split based on the label(leave/remain)
-
-<<warning=FALSE,eval=FALSE,comment=TRUE>>==
-#split dataset into leave and remain dataframes
-tweets = split(leaveRemainTweets, leaveRemainTweets$label)
-remainTweets = tweets$Remain
-leaveTweets = tweets$Leave
-@
-
-<<warning=FALSE,echo=FALSE, cache=TRUE>>==
-#split dataset into leave and remain dataframes
-tweets = split(leaveRemainTweets, leaveRemainTweets$label)
-remainTweets = tweets$Remain
-leaveTweets = tweets$Leave
-@
-
-Next lets check how many leave/remain tweets they are
-<<warning=FALSE,eval=FALSE,comment=TRUE>>==
-nrow(remainTweets)
-nrow(leaveTweets)
-@
-
-Number of remain tweets
-<<warning=FALSE,echo=FALSE>>==
-nrow(remainTweets)
-@
-
-Number of leave tweeets
-<<warning=FALSE,echo=FALSE>>==
-nrow(leaveTweets)
-@
-
 
 \subsection{Preprocessing}
 
 In order to pre-process the leaveRemain tweets, I built a custom corpus function. Which can be found below.
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
-buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation){
-  
-  #Check the optional parameters are set
-  wordA <-hasArg(wordAssocation)
-  wds <- hasArg(wholeDataSet)
-  wordc <-  hasArg(wordCloud)
-  
-  corp <- Corpus(VectorSource(tweets$text))
-  
-  
-  corp <- tm_map(corp,
-                 content_transformer(function(x) iconv(x, to='ASCII',
-                                                       sub='byte')))
-  # remove stop words and other preprocessing
- 
-  corp <- tm_map(corp, content_transformer(tolower))
-  corp <- tm_map(corp, removeNumbers)
-
-  toSpace = content_transformer( function(x, pattern) gsub(pattern," ",x) )
-  
-  
-  ##Tweet cleaning
-  
-  #credit to https://stackoverflow.com/a/31352005/8816204
-  corp <-tm_map(corp, toSpace, "(RT|via)((?:\\b\\W*@\\w+)+)")
-  corp <-tm_map(corp, toSpace, "@\\w+")
-  corp <-tm_map(corp, toSpace, "&amp")
-  
-  ##Remove URLS from tweets
-  corp <-tm_map(corp, toSpace, "httpsw+")
-  corp <-tm_map(corp, toSpace, "http:\\w+")
-  corp <-tm_map(corp, toSpace, "https:\\w+")
-
-  corp <-tm_map(corp, toSpace, "[ \t]{2,}")
-  corp <-tm_map(corp, toSpace, "^\\s+|\\s+$")
-  
-
-  # ##Remove obvious words /stopwords
- if(wds){
-   if(wholeDataSet){
-     corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
-   }
-  } else{
-    corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb")))  
-}
-  
-  
-
-  #remove punctuation last so urls are removed correctly
-  corp <- tm_map(corp, removePunctuation)
-  
-  #If wordAssocation is true then create document term matrix
-  if(wordA){
-    if(wordAssocation){
-      dtm <- DocumentTermMatrix(corp)
-    }
-  }else if(!wordA){ # If no  wordAssocation then create TermDocument Matrix
-    tdm <- TermDocumentMatrix(corp)
-    
-    m <- as.matrix(tdm)
-    v <- sort(rowSums(m), decreasing = TRUE)
-    d <- data.frame(word = names(v), freq = v)
-    d$word <- gsub("˜", " ", d$word) ## Edit 2
-    
-    
-    if(wordc){
-      if(wds){
-        tweets <- d$word
-      } else{
-        tweets <- d$word
-        if(wordCloud){
-          wordcloud(words =tweets, freq = d$freq, min.freq = 3,
-                    max.words=2000, random.order=FALSE, rot.per=0.2,
-                    colors=brewer.pal(8, "Dark2"))
-        }
-      }
-  
-    }
-  
-  }
-    
-}
-@
-
-
-<<warning=FALSE,echo=FALSE, cache=TRUE>>==
 #Custom Corpus Function for preprocessing  
 
-buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation){
-  
-  #Check the optional parameters are set
-  wordA <-hasArg(wordAssocation)
-  wds <- hasArg(wholeDataSet)
-  wordc <-  hasArg(wordCloud)
-  
+buildCorpus <- function (tweets, wholeDataSet, wordAssocation){
   corp <- Corpus(VectorSource(tweets$text))
   
   
@@ -849,25 +779,21 @@ buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation){
   
 
   # ##Remove obvious words /stopwords
- if(wds){
-   if(wholeDataSet){
-     corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
-   }
-  } else{
-    corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb")))  
-}
-  
-  
+  if(missing(wholeDataSet)){
+    corp <- tm_map(corp, 
+                   function(x)removeWords(x,c(
+                     stopwords("english"),"amp", "will", "\‰Û_", "https", "http", "httpsdb")))
+  } else if(wholeDataSet == TRUE){
+    corp <- tm_map(corp, 
+                   function(x)removeWords(x,c(
+                     stopwords("english"),"amp", "will", "\‰Û_", "https", "http", 
+                     "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
+  }
 
   #remove punctuation last so urls are removed correctly
   corp <- tm_map(corp, removePunctuation)
   
-  #If wordAssocation is true then create document term matrix
-  if(wordA){
-    if(wordAssocation){
-      dtm <- DocumentTermMatrix(corp)
-    }
-  }else if(!wordA){ # If no  wordAssocation then create TermDocument Matrix
+  if(missing(wordAssocation)){
     tdm <- TermDocumentMatrix(corp)
     
     m <- as.matrix(tdm)
@@ -875,110 +801,16 @@ buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation){
     d <- data.frame(word = names(v), freq = v)
     d$word <- gsub("˜", " ", d$word) ## Edit 2
     
-    
-    if(wordc){
-      if(wds){
-        tweets <- d$word
-      } else{
-        tweets <- d$word
-        if(wordCloud){
-          wordcloud(words =tweets, freq = d$freq, min.freq = 3,
-                    max.words=2000, random.order=FALSE, rot.per=0.2,
-                    colors=brewer.pal(8, "Dark2"))
-        }
-      }
-  
-    }
-  
+    tweets <- d$word
+  }else if(wordAssocation == TRUE){
+    dtm <- DocumentTermMatrix(corp)
   }
-    
 }
 @
-
-By using the buildCorpus function with the word cloud parameter set to TRUE, it will create a word cloud for us. 
-<<warning=FALSE,eval=FALSE,comment=TRUE>>==
-leaveWordCloud <- buildCorpus(leaveTweets,TRUE)
-
-remainWordCloud <- buildCorpus(remainTweets,TRUE)
-@
-
-\begin{figure}[H]
-\begin{center}
-<<warning=FALSE,echo=FALSE,cache=TRUE,fig.height=6.0,out.width=".80\\linewidth">>=
-leaveWordCloud <- buildCorpus(leaveTweets,TRUE)
-@
-\caption {Word cloud of leave tweets}
-\label{fig2}
-\end {center}
-\end {figure}
-
-
-\begin{figure}[H]
-\begin{center}
-<<warning=FALSE,echo=FALSE,cache=TRUE,fig.height=6.0,out.width=".80\\linewidth">>=
-remainWordCloud <- buildCorpus(remainTweets,TRUE)
-@
-\caption {Word cloud of Remain tweets}
-\label{fig3}
-\end {center}
-\end {figure}
-
-
 
 \clearpage
 
 \subsection{Text Analysis}
-
-\subsubsection{Most Frequent word in Tweet Collection}
-
-To find the most frequent word in the collection of tweets, the whole leaveRemainTweets dataframe was based into the buildCorpus function with the wordCloud option set to FALSE and wholedataset option set to TRUE.
-
-<<warning=FALSE,eval=FALSE,comment=TRUE>>==
-#Get Most frequent word
-tweetWordCloud <-buildCorpus(leaveRemainTweets, FALSE, TRUE)
-head(tweetWordCloud,1)
-@
-
-
-<<warning=FALSE,echo=FALSE, cache=TRUE>>==
-#Get Most frequent word
-tweetWordCloud <-buildCorpus(leaveRemainTweets, FALSE, TRUE)
-head(tweetWordCloud,1)
-@
-
-% \subsubsection{Word Association}
-% 
-% 
-% To find out which words appear together often, I used the buildCorpus function to return a termDocumentMatrix. The most frequent terms with a lowfreq value of 50 is also created.
-% 
-% <<warning=FALSE,eval=FALSE,comment=TRUE>>==
-% wordAssoication <- buildCorpus(leaveRemainTweets,FALSE,TRUE,TRUE)
-% freq.terms <- findFreqTerms(wordAssoication, lowfreq =50)
-% @
-% 
-% 
-% <<warning=FALSE,echo=FALSE, cache=TRUE>>==
-% wordAssoication <- buildCorpus(leaveRemainTweets,FALSE,TRUE,TRUE)
-% freq.terms <- findFreqTerms(wordAssoication, lowfreq =50)
-% @
-% 
-% 
-% Lets inspect the top 30 most frequent words in the tweet collection
-% 
-% 
-% <<warning=FALSE,eval=FALSE,comment=TRUE>>==
-% head(freq.terms,30)
-% @
-% 
-% <<warning=FALSE,echo=FALSE, cache=TRUE>>==
-% head(freq.terms,30)
-% @
-% 
-% Now to plot the word association (term document matrix) against the frequent terms.
-% 
-
-
-\subsubsection{Most Frequent Words in Both Leave \& Remain Tweets}
 
 
 

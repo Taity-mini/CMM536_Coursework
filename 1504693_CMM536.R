@@ -1,27 +1,19 @@
 
-# # Function to Install and Load R Packages
-# Install_And_Load <- function(Required_Packages)
-# {
-#   Remaining_Packages <- Required_Packages[!(Required_Packages %in% installed.packages()[,"Package"])];
-#   
-#   if(length(Remaining_Packages)) 
-#   {
-#     install.packages(Remaining_Packages);
-#   }
-#   for(package_name in Required_Packages)
-#   {
-#     library(package_name,character.only=TRUE,quietly=TRUE);
-#   }
-# }
-# 
-# # Specify the list of required packages to be installed and load    
-# Required_Packages=c("ggplot2", "jsonlite", "data.table", "RMOA", "ROCR", "stream", "caret");
-# 
-# # Call the Function
-# Install_And_Load(Required_Packages)
+# Function to Install and Load R Packages
+Install_And_Load <- function(Required_Packages)
+{
+  Remaining_Packages <- Required_Packages[!(Required_Packages %in% installed.packages()[,"Package"])];
 
-#Clean RStudio Environment
-# rm(list = ls())
+  if(length(Remaining_Packages))
+  {
+    install.packages(Remaining_Packages);
+  }
+  for(package_name in Required_Packages)
+  {
+    library(package_name,character.only=TRUE,quietly=TRUE);
+  }
+}
+
 
 #Import librarys
 library(caret)
@@ -32,20 +24,27 @@ library(C50)
 library(datasets)
 library(rpart)
 library(ggplot2)
-library(jsonlite)
 library(data.table)
-library(RMOA)
-library(ROCR)
 library(stream)
 library(mlbench)
 library(doParallel)
-library("stream")
-library("streamMOA")
-
-require(data.table)
+library(streamMOA)
+library(e1071)
 require(RMOA)
 require(ROCR)
-require(stream)
+
+
+
+# Specify the list of required packages to be installed and load
+Required_Packages=c("ggplot2", "jsonlite", "data.table", "RMOA", "ROCR", "stream", "caret", "partykit",
+                    "RWeka", "C50", "datasets", "rpart", "mlbench", "doParallel", "streamMOA", "RMOA", "ROCR", "e1071");
+# 
+# # Call the Function
+Install_And_Load(Required_Packages)
+#Clean RStudio Environment
+# rm(list = ls())
+
+
 
 
 #Set working directory
@@ -159,16 +158,15 @@ ctrl <- trainControl(method = "repeatedcv",
 # ensure reproducibility of results by setting the seed to a known value
 set.seed(1)
 #use knn
-mod21.knn<- train(class~., data=training, 
-                  method="knn", tuneGrid=expand.grid(.k=3),trControl=ctrl)
+knnModel<- train(class~., data=training,method="knn", tuneGrid=expand.grid(.k=3), trControl=ctrl)
 
-print(mod21.knn)
-summary(mod21.knn$finalModel)
+print(knnModel)
+summary(knnModel$finalModel)
 names(mod21.knn)
 
 
 #Evaluation
-predictkNN <- predict(mod21.knn,testing)
+predictkNN <- predict(knnModel,testing)
 confusionMatrix(predictkNN, testing$class)
 
 
@@ -186,6 +184,7 @@ df <- binAdult
 
 str(df$class)
 
+#Set 
 ctrl <- MOAoptions(model = "OCBoost", randomSeed = 123456789, ensembleSize = 25,
                    smoothingParameter = 0.5)
 mymodel <- OCBoost(control = ctrl)
@@ -194,18 +193,16 @@ mymodel
 
 
 dfStream <-datastream_dataframe(data=as.data.table(df))
-
-chunk <- 100
+chunk <- 50
 turns <- (nrow(dfStream$data)/chunk)-1
 turns <- floor(turns)
 position <- chunk
 
-#first sample (train)##
-
+#first sample (train)
 sample <- dfStream$get_points(dfStream, n =chunk,
                              outofpoints = c("stop", "warn", "ignore"))
 head(sample,3)
-head(binAdult,3)
+head(df,3)
 
 str(binAdult$class)
 
@@ -234,10 +231,12 @@ for (i in 1:turns){
 
 ##Do some prediction to test the model
 
-predictions <- predict (myboostedclasifier, sample)
+predictions <- predict(myboostedclasifier, sample)
 table(sprintf("Reality: %s", sample$class),
       sprintf("Predicted: %s", predictions))
 
+
+predictions <- as.factor(predictions)
 confusion.mstream <- confusionMatrix(predictions, sample$class)
 
 cat("Accuracy is: ", confusion.mstream$overall["Accuracy"])
@@ -254,7 +253,7 @@ for(i in 1:turns){
   sample <- dfStream$get_points(dfStream, n=chunk,
                                 outofpoints = c("Stop", "warn", "ignore"))
   predictions <- predict(myboostedclasifier, sample)
-  
+  predictions <- as.factor(predictions)
   #caculate accuracy
   
   confusion.mstream <- confusionMatrix(predictions, sample$class)
