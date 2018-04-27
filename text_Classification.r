@@ -217,6 +217,8 @@ svmModel <- train(label~ ., data = training,
                 
 )
 
+rm(svmModel2)
+
 svmModel
 
 #Evaluate
@@ -238,10 +240,10 @@ SVMModel2 <- train(label~ ., data = training,
                   
 )
 
-c50Model <- train(label~ ., data = training,
+nbModel <- train(label~ ., data = training,
                  trControl = train_control,
                  tuneLength =10,
-                 method="C5.0"
+                 method="nb"
 )
 
 RFModel<- train(label~., data=training,
@@ -250,8 +252,10 @@ RFModel<- train(label~., data=training,
                 tuneLength =10,
                 metric = 'Accuracy'
 )
+library("klaR")
 
 
-
-predictSVM2 <- predict(SVMModel2,testing)
+predictSVM2 <- predict(SVMModel2,testing) 
 confusionMatrix(predictSVM2, testing$label)
+
+predictC50 <- predict(c50Model, testing)

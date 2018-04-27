@@ -1087,8 +1087,8 @@ plot(wordAssoication, term = freq.terms, corThreshold = 0.12, weighting = T)
 
 \begin{figure}[H]
 \begin{center}
+\includegraphics[page=1,width=.90\textwidth]{{wordAPlot.pdf}}
 \caption {Word Association Plot}
-\includegraphics[page=1,width=.45\textwidth]{{wordAPlot.pdf}
 \label{fig5}
 \end {center}
 \end {figure}

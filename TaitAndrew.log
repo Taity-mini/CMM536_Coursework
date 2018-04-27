@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6500 64-bit) (preloaded format=pdflatex 2018.4.17)  27 APR 2018 13:58
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6500 64-bit) (preloaded format=pdflatex 2018.4.17)  27 APR 2018 15:38
 entering extended mode
 **./TaitAndrew.tex
 (TaitAndrew.tex
@@ -1780,7 +1780,7 @@ Package xcolor Warning: Incompatible color definition on input line 323.
 
 Package xcolor Warning: Incompatible color definition on input line 334.
 
-<figure/unnamed-chunk-16-1.pdf, id=105, pagebox=cropbox, 505.89pt x 614.295pt>
+<figure/unnamed-chunk-16-1.pdf, id=129, pagebox=cropbox, 505.89pt x 614.295pt>
 File: figure/unnamed-chunk-16-1.pdf Graphic file (type pdf)
 <use figure/unnamed-chunk-16-1.pdf>
 Package pdftex.def Info: figure/unnamed-chunk-16-1.pdf  used on input line 335.
@@ -1955,7 +1955,7 @@ Package xcolor Warning: Incompatible color definition on input line 880.
 
 Package xcolor Warning: Incompatible color definition on input line 892.
 
-<figure/unnamed-chunk-65-1.pdf, id=147, pagebox=cropbox, 505.89pt x 505.89pt>
+<figure/unnamed-chunk-65-1.pdf, id=171, pagebox=cropbox, 505.89pt x 505.89pt>
 File: figure/unnamed-chunk-65-1.pdf Graphic file (type pdf)
 <use figure/unnamed-chunk-65-1.pdf>
 Package pdftex.def Info: figure/unnamed-chunk-65-1.pdf  used on input line 893.
@@ -2020,7 +2020,7 @@ Package xcolor Warning: Incompatible color definition on input line 1072.
 
 Package xcolor Warning: Incompatible color definition on input line 1084.
 
-<figure/unnamed-chunk-76-1.pdf, id=171, pagebox=cropbox, 505.89pt x 433.62pt>
+<figure/unnamed-chunk-76-1.pdf, id=195, pagebox=cropbox, 505.89pt x 433.62pt>
 File: figure/unnamed-chunk-76-1.pdf Graphic file (type pdf)
 <use figure/unnamed-chunk-76-1.pdf>
 Package pdftex.def Info: figure/unnamed-chunk-76-1.pdf  used on input line 1085
@@ -2031,7 +2031,7 @@ Package pdftex.def Info: Requested size: 375.80542pt x 322.1243pt on input line
 
 Package xcolor Warning: Incompatible color definition on input line 1097.
 
-<figure/unnamed-chunk-77-1.pdf, id=176, pagebox=cropbox, 505.89pt x 433.62pt>
+<figure/unnamed-chunk-77-1.pdf, id=200, pagebox=cropbox, 505.89pt x 433.62pt>
 File: figure/unnamed-chunk-77-1.pdf Graphic file (type pdf)
 <use figure/unnamed-chunk-77-1.pdf>
 Package pdftex.def Info: figure/unnamed-chunk-77-1.pdf  used on input line 1098
@@ -2066,20 +2066,20 @@ Package xcolor Warning: Incompatible color definition on input line 1190.
 
 Package xcolor Warning: Incompatible color definition on input line 1206.
 
-Runaway argument?
-{{wordAPlot.pdf} \label {fig5} \end {center} \end {figure} 
-! Paragraph ended before \Gin@ii was complete.
-<to be read again> 
-                   \par 
-l.1221 
-       
-I suspect you've forgotten a `}', causing me to apply this
-control sequence to too much text. How can we recover?
-My plan is to forget the whole thing and hope for the best.
+<wordAPlot.pdf, id=226, page=1, pagebox=cropbox, 597.23125pt x 844.15375pt>
+File: wordAPlot.pdf Graphic file (type pdf)
+<use wordAPlot.pdf, page 1>
+Package pdftex.def Info: wordAPlot.pdf , page1 used on input line 1216. on inpu
+t line 1216.
+Package pdftex.def Info: Requested size: 422.77661pt x 597.57582pt on input lin
+e 1216.
+[20
 
+]
 
 Package xcolor Warning: Incompatible color definition on input line 1238.
 
+[21 <./wordAPlot.pdf>]
 
 Package xcolor Warning: Incompatible color definition on input line 1248.
 
@@ -2089,6 +2089,7 @@ Package xcolor Warning: Incompatible color definition on input line 1259.
 
 Package xcolor Warning: Incompatible color definition on input line 1269.
 
+[22]
 
 Package xcolor Warning: Incompatible color definition on input line 1284.
 
@@ -2110,33 +2111,27 @@ Package xcolor Warning: Incompatible color definition on input line 1336.
 
 Package xcolor Warning: Incompatible color definition on input line 1344.
 
+[23
+
+]
 
 Package xcolor Warning: Incompatible color definition on input line 1377.
 
 
 Package xcolor Warning: Incompatible color definition on input line 1388.
 
+[24] [25
 
-! LaTeX Error: \begin{center} on input line 1215 ended by \end{document}.
 
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.1438 \end{document}
-                     
-Your command was ignored.
-Type  I <command> <return>  to replace it with another command,
-or  <return>  to continue without it.
-
+]
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1438.
 Package atveryend Info: Empty hook `AfterLastShipout' on input line 1438.
-(TaitAndrew.aux)
+ (TaitAndrew.aux)
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1438.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1438.
 
 Package rerunfilecheck Info: File `TaitAndrew.out' has not changed.
-(rerunfilecheck)             Checksum: A1BBE0CA7A6D3B98E6BE60F92FF333EB;1073.
+(rerunfilecheck)             Checksum: DF8A9367790363A40936C5E730139FC9;1543.
 
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
@@ -2144,42 +2139,33 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 Package logreq Info: Writing requests to 'TaitAndrew.run.xml'.
 \openout1 = `TaitAndrew.run.xml'.
 
-! You can't use `\end' in internal vertical mode.
-\enddocument ...cumenthook \deadcycles \z@ \@@end 
-                                                  
-l.1438 \end{document}
-                     
-Sorry, but I'm not programmed to handle this case;
-I'll just pretend that you didn't ask for it.
-If you're in the wrong mode, you might be able to
-return to the right one by typing `I}' or `I$' or `I\par'.
-
-
-! LaTeX Error: \begin{center} on input line 1215 ended by \end{document}.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.1438 \end{document}
-                     
-Your command was ignored.
-Type  I <command> <return>  to replace it with another command,
-or  <return>  to continue without it.
-
-)
-! Emergency stop.
-<*> ./TaitAndrew.tex
-                    
-*** (job aborted, no legal \end found)
-
- 
+ ) 
 Here is how much of TeX's memory you used:
- 29785 strings out of 493312
- 549006 string characters out of 3138902
- 1116816 words of memory out of 3000000
- 32747 multiletter control sequences out of 15000+200000
+ 29811 strings out of 493312
+ 549393 string characters out of 3138902
+ 1109816 words of memory out of 3000000
+ 32759 multiletter control sequences out of 15000+200000
  46320 words of font info for 44 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 62i,7n,92p,1157b,1480s stack positions out of 5000i,500n,10000p,200000b,50000s
-!  ==> Fatal error occurred, no output PDF file produced!
+ 62i,7n,92p,1157b,1263s stack positions out of 5000i,500n,10000p,200000b,50000s
+{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-rmsc.enc}{C:/Program Files
+/MiKTeX 2.9/fonts/enc/dvips/lm/lm-ts1.enc}{C:/Program Files/MiKTeX 2.9/fonts/en
+c/dvips/lm/lm-rm.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-rmtt.en
+c}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathit.enc}<C:/Program Fil
+es/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files/MiKTe
+X 2.9/fonts/type1/public/lm/lmbx10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1
+/public/lm/lmbx12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmcsc1
+0.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmmi10.pfb><C:/Program
+ Files/MiKTeX 2.9/fonts/type1/public/lm/lmr10.pfb><C:/Program Files/MiKTeX 2.9/
+fonts/type1/public/lm/lmr12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public
+/lm/lmr17.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmri10.pfb><C:
+/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmri12.pfb><C:/Program Files/Mi
+KTeX 2.9/fonts/type1/public/lm/lmtk10.pfb><C:/Program Files/MiKTeX 2.9/fonts/ty
+pe1/public/lm/lmtt10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmt
+ti10.pfb>
+Output written on TaitAndrew.pdf (25 pages, 394890 bytes).
+PDF statistics:
+ 324 PDF objects out of 1000 (max. 8388607)
+ 55 named destinations out of 1000 (max. 500000)
+ 222 words of extra memory for PDF output out of 10000 (max. 10000000)
+
