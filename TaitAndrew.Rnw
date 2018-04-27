@@ -69,24 +69,26 @@
 %\thispagestyle{empty}
 
 \section{Research}
+The paper that was chosen for this work is \cite{PHRIDVIRAJ2014255}. The authors provided a full review on different streaming algorithms and method that handle data mining. Below is a review of this paper that includes problem statement, related work and methods applied.
 
-
-The paper that was chosen for this work is \cite{PHRIDVIRAJ2014255}. The authors provided a full review on different streaming algorithms and methos that handle data mining. Below is a review of this paper that includes problem statement, related work and methods applied.
-
-\textcolor{blue}{\textit{Notice how I cited the paper, and how does it appear in the document, to do so, you need to have a file in your working director (references.bib), this file simply contains the bibtext items for the papers you chose. These BibTex items are often avaiable to download from publishers website, see Figure~\ref{fig1}}}
 \subsection{Problem Statement}
-What is this paper about? your text goes here, your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here
+The process of data mining is to discover otherwise hidden information and patterns from already existing data. What makes this complicated when it comes to data streams is that unlike a traditional relation database or data warehouse there isn't a pre-defined structure. This paper outlines an algorithm that could possibly overcomes these difficulties.
 
 \subsection{Relevant Work}
-[your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here]
+There is numerous related works and research in the field of data streaming. For instance the ACM KDDD international conference held in 2010, outlined the problem of finding the top-k frequent items in a data stream with flexible sliding widows. This would be only to mine the top-k frequent items, not reporting on all frequent items.
+
 \subsection{Methods}
-[your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here]
+The paper outlines the issues that the new data streaming algorithm may face. This included memory constraint, data prepossessing choice of data structure, identifying data distributions and target concepts and dimensional reduction.
+These are import issues to cover as they will reduce the efficiency and overall accuracy of the data streaming algorithm.
+
 \subsection{Results}
-[your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here]
+The algorithm produces a decision tree which it outlines the nodes that are active/live as black, killed nodes as red and green nodes on the first level to indicate that they are not closed. It produces an more effective decision tree it only looks for the top-k frequent items in the decision and discards the rest.
+
 \subsection{Conclusion}
+As the subject matter is dealing with an unlimited amount of information, whether this will be from social media streams or general information retrieval. There is still problem to overcome with clustering, classification and topic detection in terms of data streaming. The proposed algorithm provides a starting point by creating a decision tree of the top-k frequent items.
 
-[your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here your text goes here]
 
+\clearpage
 
 
 
@@ -94,7 +96,7 @@ What is this paper about? your text goes here, your text goes here your text goe
 
 \subsection{Dataset Choice}
 
-The dataset that has been chosen for this part of the coursework is the 'adult' dataset. This is avaiable on the UCI repository. It has been proved to a good evaluation of classification methods
+The dataset that has been chosen for this part of the coursework is the 'adult' dataset. This is available on the UCI repository. It has been proved to a good evaluation of classification methods
 
 \url{https://archive.ics.uci.edu/ml/datasets/adult}
 
@@ -106,7 +108,7 @@ The main purpose of the adult dataset is to find out which characteristics of th
 
 
 
-To start off I will clear the RStudio environment and import the required libaries.
+To start off I will clear the RStudio environment and import the required libraries.
 
 <<eval=FALSE,comment=TRUE>>=
 #Clean RStudio Environment
@@ -280,6 +282,7 @@ barplot(table(adult$class))
 \end {center}
 \end {figure}
 
+As the barplot clearly shows, the adult dataset is highly unbalanced with <=50k being the majority class by a large margin!
 
 \clearpage
 
@@ -336,7 +339,7 @@ str(cleanadult)
 
 As the adult dataset is a mixture of factors, integers and characters, I decided that transforming the dataset into binary. This will be create features based on every possible value in the dataset.
 
-The cleanadult dataframe is first copied and the class is removed (it's not being transforme dinto binary)
+The cleanadult dataframe is first copied and the class is removed (it's not being transformed into binary)
 
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
 #Copy dataset
@@ -397,7 +400,7 @@ binAdult <- binAdult[!row.has.na,]
 
 When it came to dividing the mushroom dataset into training and testing subsets, I decided to go with 80
 percent training and 20 percent testing split as a starting point/baseline. 
-Since the class distrubtion is unbalenced, I thought this split would cover the majority of cases.
+Since the class distribution is unbalanced, I thought this split would cover the majority of cases.
 
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
 #split 80% training and 20% testing datasets
@@ -477,9 +480,11 @@ print(mod21.knn)
 print(mod21.knn)
 @
 
+On first inspection, the knnModel produces an accuracy of 83.61\% and kappa value of 0.55. Further evaluation can be found in the next section.
+
 \clearpage
 
-\subsubsection {Evalulation}
+\subsubsection {Evaluation}
 
 To evaluate the module, a confusion matrix is produced by predicting the against the testing (20 percent of the total dataset ) subset.
 
@@ -496,11 +501,18 @@ predictkNN <- predict(mod21.knn,testing)
 confusionMatrix(predictkNN, testing$class)
 @
 
+As the confusion matrix shows that the kNNmodel produced an accuracy of 89.33\% when predicted against the training subset.
+
+It correctly classified 17026 rows as <=50k and 4530 rows as >=50k.
+However 1098 rows were incorrectly classified as <=50k and 1477 rows were incorrectly classified as >50k.
+
+Overall it's a good start and could be improved upon further, with more computing resources and time to hand.
+
 \clearpage
 
 \subsection{Build Stream Classifier}
 
-For the data streaming classifer, I used the binary adult dataset as used in the kNN model.
+For the data streaming classifier, I used the binary adult dataset as used in the kNN model.
 
 First the binary adult dataset is copied to a dataframe.
 
@@ -531,7 +543,7 @@ mymodel <- OCBoost(control = ctrl)
 mymodel
 @
 
-After setting the classification model, it's time to create the datastream and set some variables to control the iteration over the stream (see for loop)
+After setting the classification model, it's time to create the data stream and set some variables to control the iteration over the stream (see for loop)
 
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
 #Create datastream from the dataframe.
@@ -712,7 +724,7 @@ head(accuracies)
 
 @
 
-Finnally lets plot the accuracy vs the chunk number
+Finally lets plot the accuracy vs the chunk number
 
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
 plot(accuracies,type='l',col='red',
@@ -731,7 +743,9 @@ plot(accuracies,type='l',col='red',
 \end {center}
 \end {figure}
 
+As the plot above shows, the overall accuracy varies as the chunk number increases. Although it drops to bellow 70\% just after 50 chunks and again just before 150 chunks. The highest accuracy value is between 170 and 190 chunks.
 
+The limitation for data streaming is that the adult dataset is unbalanced, also to improve classification models more computing resources would be required. As this is a length process that is restricted to the computing power provided on my laptop.
 
 \clearpage
 
@@ -774,7 +788,7 @@ Number of remain tweets
 nrow(remainTweets)
 @
 
-Number of leave tweeets
+Number of leave tweets
 <<warning=FALSE,echo=FALSE>>==
 nrow(leaveTweets)
 @
@@ -825,10 +839,14 @@ buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation, dtm){
   # ##Remove obvious words /stopwords
   if(wds){
     if(wholeDataSet){
-      corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
+      corp <- tm_map(corp, function(x)removeWords
+                     (x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb"    
+                          , "eu", "brexit", "rt", "leave", "remain", "vote")))
     }
-  } else{
-    corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb")))  
+  } 
+  else{
+    corp <- tm_map(corp, function(x)removeWords
+                   (x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb")))  
   }
   
   
@@ -836,17 +854,14 @@ buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation, dtm){
   #remove punctuation last so urls are removed correctly
   corp <- tm_map(corp, removePunctuation)
   
-  #If wordAssocation is true then 
-  
 
-  
   #If wordAssocation is true then create term document  matrix
   if(wordA){
     if(wordAssocation){
       tdm <- TermDocumentMatrix(corp)
     }
     else{
-      if(dtm){
+      if(dtm){  # if dtm is true the create document term matrix
         dtm <- DocumentTermMatrix(corp)
       }
     }
@@ -864,10 +879,10 @@ buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation, dtm){
     
     if(wordc){
       if(wds){
-        tweets <- d$word
+        tweets <- d$word #whole dataset return df of processed tweets
       } else{
         tweets <- d$word
-        if(wordCloud){
+        if(wordCloud){ #return wordcloud if TRUE
           wordcloud(words =tweets, freq = d$freq, min.freq = 3,
                     max.words=2000, random.order=FALSE, rot.per=0.2,
                     colors=brewer.pal(8, "Dark2"))
@@ -988,6 +1003,8 @@ leaveWordCloud <- buildCorpus(leaveTweets,TRUE)
 remainWordCloud <- buildCorpus(remainTweets,TRUE)
 @
 
+Please see (Figure~\ref{fig3}) for leave tweets word cloud and (Figure~\ref{fig4}) for remain tweets wordcloud.
+
 \begin{figure}[H]
 \begin{center}
 <<warning=FALSE,echo=FALSE,cache=TRUE,fig.height=6.0,out.width=".80\\linewidth">>=
@@ -1012,24 +1029,6 @@ remainWordCloud <- buildCorpus(remainTweets,TRUE)
 
 \clearpage
 
-\subsection{Text Analysis}
-
-To find the most frequent word in the collection of tweets, the whole leaveRemainTweets dataframe was based into the buildCorpus function with the wordCloud option set to FALSE and wholedataset option set to TRUE.
-
-<<warning=FALSE,eval=FALSE,comment=TRUE>>==
-#Get Most frequent word
-tweetWordCloud <-buildCorpus(leaveRemainTweets, FALSE, TRUE)
-head(tweetWordCloud,1)
-@
-
-
-<<warning=FALSE,echo=FALSE, cache=TRUE>>==
-#Get Most frequent word
-tweetWordCloud <-buildCorpus(leaveRemainTweets, FALSE, TRUE)
-head(tweetWordCloud,1)
-@
-
-\clearpage
 
 \subsection{Text Analysis}
 
@@ -1079,11 +1078,14 @@ head(freq.terms,30)
 head(freq.terms,30)
 @
 
-Now to plot the word association (term document matrix) against the frequent terms.
+Now to plot (Figure~\ref{fig5}) the word association (term document matrix) against the frequent terms.
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
 plot(wordAssoication, term = freq.terms, corThreshold = 0.12, weighting = T)
 @
 
+In the plot, the thicker the line between words the greater the association. In this case June as a strong association with imagine and vote leave.
+
+Similar with European with 'must' and 'now'. Also 'Farage' and 'debate'.
 
 \begin{figure}[H]
 \begin{center}
@@ -1096,12 +1098,6 @@ plot(wordAssoication, term = freq.terms, corThreshold = 0.12, weighting = T)
 
 
 % \includepdf[pages={1-},scale=0.75]{wordAPlot.pdf}
-
-
-
-
-
-
 
 
 
@@ -1137,6 +1133,8 @@ head(remainWords, 10)
 
 \subsection{Text Classification}
 
+\subsubsection{kNNModel}
+For the text classification of
 
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
 dtm <-  buildCorpus(leaveRemainTweets,FALSE,TRUE,FALSE,TRUE)
@@ -1177,6 +1175,56 @@ inTrainTweets <- createDataPartition(y=tweets$label, p=0.7, list=FALSE)
 training <- tweets[inTrainTweets,]
 testing <- tweets[-inTrainTweets,]
 @
+
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+train_control<- trainControl(method="cv", number=5,verboseIter=FALSE)
+
+kNNTweets <- train(label~., data = training,
+                  trControl = train_control,
+                  tuneLength =5,
+                  method = "knn"
+          
+)
+@
+
+
+<<warning=FALSE,echo=FALSE, cache=TRUE>>==
+train_control<- trainControl(method="cv", number=5,verboseIter=FALSE)
+
+kNNTweets <- train(label~., data = training,
+                  trControl = train_control,
+                  tuneLength =5,
+                  method = "knn"
+          
+)
+@
+
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+kNNTweets
+@
+
+<<warning=FALSE,echo=FALSE, cache=TRUE>>==
+kNNTweets
+@
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#Evaluate
+
+predictkNNTweets <- predict(kNNTweets,testing)
+confusionMatrix(predictkNNTweets, testing$label)
+@
+
+<<warning=FALSE,echo=FALSE, cache=TRUE>>==
+predictkNNTweets <- predict(kNNTweets,testing)
+confusionMatrix(predictkNNTweets, testing$label)
+@
+
+
+\clearpage
+
+\subsubsection{Improved SVM Model}
 
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
 

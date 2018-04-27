@@ -77,9 +77,7 @@ buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation, dtm){
   #remove punctuation last so urls are removed correctly
   corp <- tm_map(corp, removePunctuation)
   
-  #If wordAssocation is true then 
   
-
   
   #If wordAssocation is true then create term document  matrix
   if(wordA){
@@ -87,7 +85,7 @@ buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation, dtm){
       tdm <- TermDocumentMatrix(corp)
     }
     else{
-      if(dtm){
+      if(dtm){ # if dtm is true the create document term matrix
         dtm <- DocumentTermMatrix(corp)
       }
     }
@@ -229,7 +227,7 @@ confusionMatrix(predictSVM, testing$label)
 
 #Improved
 
-train_control<- trainControl(method="cv", number=3,verboseIter=FALSE)
+
 
 
 
@@ -246,6 +244,15 @@ nbModel <- train(label~ ., data = training,
                  method="nb"
 )
 
+kNNTweets <- train(label~., data = training,
+                  trControl = train_control,
+                  tuneLength =5,
+                  method = "knn"
+          
+)
+
+ 
+
 RFModel<- train(label~., data=training,
                 trControl=train_control,
                 method="rf",
@@ -259,3 +266,9 @@ predictSVM2 <- predict(SVMModel2,testing)
 confusionMatrix(predictSVM2, testing$label)
 
 predictC50 <- predict(c50Model, testing)
+
+predictNA <- predict(nbModel,testing)
+confusionMatrix(predictNA, testing$label)
+
+predictkNNTweets <- predict(kNNTweets,testing)
+confusionMatrix(predictkNNTweets, testing$label)
