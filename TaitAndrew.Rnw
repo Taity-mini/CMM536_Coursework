@@ -131,9 +131,11 @@ library(tm)
 library(wordcloud)
 library(wordcloud,quietly=TRUE)
 library(RColorBrewer,quietly=TRUE)
+source("http://bioconductor.org/biocLite.R")
+biocLite("Rgraphviz")
 @
 
-<<warning=FALSE,echo=FALSE, comment=FALSE, message=FALSE>>==
+<<warning=FALSE,echo=FALSE, comment=FALSE, message=FALSE, Include=FALSE>>==
 
 #Import librarys
 library(caret)
@@ -156,6 +158,8 @@ library(tm)
 library(wordcloud)
 library(wordcloud,quietly=TRUE)
 library(RColorBrewer,quietly=TRUE)
+source("http://bioconductor.org/biocLite.R")
+biocLite("Rgraphviz")
 @
 
 Then set the working directory to the coursework folder
@@ -782,12 +786,13 @@ nrow(leaveTweets)
 
 In order to pre-process the leaveRemain tweets, I built a custom corpus function. Which can be found below.
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
-buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation){
+buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation, dtm){
   
   #Check the optional parameters are set
   wordA <-hasArg(wordAssocation)
   wds <- hasArg(wholeDataSet)
   wordc <-  hasArg(wordCloud)
+  dtmcheck <- hasArg(dtm)
   
   corp <- Corpus(VectorSource(tweets$text))
   
@@ -796,10 +801,10 @@ buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation){
                  content_transformer(function(x) iconv(x, to='ASCII',
                                                        sub='byte')))
   # remove stop words and other preprocessing
- 
+  
   corp <- tm_map(corp, content_transformer(tolower))
   corp <- tm_map(corp, removeNumbers)
-
+  
   toSpace = content_transformer( function(x, pattern) gsub(pattern," ",x) )
   
   
@@ -814,31 +819,43 @@ buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation){
   corp <-tm_map(corp, toSpace, "httpsw+")
   corp <-tm_map(corp, toSpace, "http:\\w+")
   corp <-tm_map(corp, toSpace, "https:\\w+")
-
+  
   corp <-tm_map(corp, toSpace, "[ \t]{2,}")
   corp <-tm_map(corp, toSpace, "^\\s+|\\s+$")
   
-
+  
   # ##Remove obvious words /stopwords
- if(wds){
-   if(wholeDataSet){
-     corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
-   }
+  if(wds){
+    if(wholeDataSet){
+      corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
+    }
   } else{
     corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb")))  
-}
+  }
   
   
-
+  
   #remove punctuation last so urls are removed correctly
   corp <- tm_map(corp, removePunctuation)
   
-  #If wordAssocation is true then create document term matrix
+  #If wordAssocation is true then 
+  
+
+  
+  #If wordAssocation is true then create term document  matrix
   if(wordA){
     if(wordAssocation){
-      dtm <- DocumentTermMatrix(corp)
+      tdm <- TermDocumentMatrix(corp)
     }
-  }else if(!wordA){ # If no  wordAssocation then create TermDocument Matrix
+    else{
+      if(dtm){
+        dtm <- DocumentTermMatrix(corp)
+      }
+    }
+    
+  }
+ 
+  else if(!wordA){ # If no  wordAssocation then create TermDocument Matrix
     tdm <- TermDocumentMatrix(corp)
     
     m <- as.matrix(tdm)
@@ -858,23 +875,24 @@ buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation){
                     colors=brewer.pal(8, "Dark2"))
         }
       }
-  
+      
     }
-  
-  }
     
+  }
+ 
 }
 @
 
 <<warning=FALSE,echo=FALSE, cache=TRUE>>==
 #Custom Corpus Function for preprocessing  
 
-buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation){
+buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation, dtm){
   
   #Check the optional parameters are set
   wordA <-hasArg(wordAssocation)
   wds <- hasArg(wholeDataSet)
   wordc <-  hasArg(wordCloud)
+  dtmcheck <- hasArg(dtm)
   
   corp <- Corpus(VectorSource(tweets$text))
   
@@ -883,10 +901,10 @@ buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation){
                  content_transformer(function(x) iconv(x, to='ASCII',
                                                        sub='byte')))
   # remove stop words and other preprocessing
- 
+  
   corp <- tm_map(corp, content_transformer(tolower))
   corp <- tm_map(corp, removeNumbers)
-
+  
   toSpace = content_transformer( function(x, pattern) gsub(pattern," ",x) )
   
   
@@ -901,31 +919,43 @@ buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation){
   corp <-tm_map(corp, toSpace, "httpsw+")
   corp <-tm_map(corp, toSpace, "http:\\w+")
   corp <-tm_map(corp, toSpace, "https:\\w+")
-
+  
   corp <-tm_map(corp, toSpace, "[ \t]{2,}")
   corp <-tm_map(corp, toSpace, "^\\s+|\\s+$")
   
-
+  
   # ##Remove obvious words /stopwords
- if(wds){
-   if(wholeDataSet){
-     corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
-   }
+  if(wds){
+    if(wholeDataSet){
+      corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb", "eu", "brexit", "rt", "leave", "remain", "vote")))
+    }
   } else{
     corp <- tm_map(corp, function(x)removeWords(x,c(stopwords("english"),"amp", "will", "‰Û_", "https", "http", "httpsdb")))  
-}
+  }
   
   
-
+  
   #remove punctuation last so urls are removed correctly
   corp <- tm_map(corp, removePunctuation)
   
-  #If wordAssocation is true then create document term matrix
+  #If wordAssocation is true then 
+  
+
+  
+  #If wordAssocation is true then create term document  matrix
   if(wordA){
     if(wordAssocation){
-      dtm <- DocumentTermMatrix(corp)
+      tdm <- TermDocumentMatrix(corp)
     }
-  }else if(!wordA){ # If no  wordAssocation then create TermDocument Matrix
+    else{
+      if(dtm){
+        dtm <- DocumentTermMatrix(corp)
+      }
+    }
+    
+  }
+ 
+  else if(!wordA){ # If no  wordAssocation then create TermDocument Matrix
     tdm <- TermDocumentMatrix(corp)
     
     m <- as.matrix(tdm)
@@ -945,11 +975,11 @@ buildCorpus <- function (tweets, wordCloud, wholeDataSet, wordAssocation){
                     colors=brewer.pal(8, "Dark2"))
         }
       }
-  
+      
     }
-  
-  }
     
+  }
+ 
 }
 @
 
@@ -1003,7 +1033,7 @@ head(tweetWordCloud,1)
 
 \clearpage
 
-\subsection{Text Classification}
+\subsection{Text Analysis}
 
 \subsubsection{Most Frequent word in Tweet Collection}
 
@@ -1052,10 +1082,95 @@ head(freq.terms,30)
 @
 
 Now to plot the word association (term document matrix) against the frequent terms.
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+plot(wordAssoication, term = freq.terms, corThreshold = 0.12, weighting = T)
+@
+
+\includegraphics{Rplot02.png}
 
 
+
+
+% 
+% <<warning=FALSE,echo=FALSE, cache=TRUE>>==
+% plot(wordAssoication, term = freq.terms, corThreshold = 0.12, weighting = T)
+% @
+
+
+
+\clearpage
 
 \subsubsection{Most Frequent Words in Both Leave \& Remain Tweets}
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#Leave
+leaveWords <- buildCorpus(leaveTweets, FALSE,TRUE)
+head(leaveWords, 10)
+@
+
+<<warning=FALSE,echo=FALSE, cache=TRUE>>==
+#Leave
+leaveWords <- buildCorpus(leaveTweets, FALSE,TRUE)
+head(leaveWords, 10)
+@
+
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#Remain
+remainWords <- buildCorpus(remainTweets, FALSE,TRUE)
+head(remainWords, 10)
+@
+
+<<warning=FALSE,echo=FALSE, cache=TRUE>>==
+#Remain
+remainWords <- buildCorpus(remainTweets, FALSE,TRUE)
+head(remainWords, 10)
+@
+
+\clearpage
+
+\subsection{Text Classification}
+
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+dtm <-  buildCorpus(leaveRemainTweets,FALSE,TRUE,FALSE,TRUE)
+
+dtm <- as.matrix(dtm)
+tweets <- data.frame(dtm)
+
+tweets$label <- leaveRemainTweets$label
+@
+
+
+<<warning=FALSE,echo=FALSE, cache=TRUE>>==
+#Get term document matrix
+dtm <-  buildCorpus(leaveRemainTweets,FALSE,TRUE,FALSE,TRUE)
+
+dtm <- as.matrix(dtm)
+tweets <- data.frame(dtm)
+
+tweets$label <- leaveRemainTweets$label
+@
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#Split data into training and testing subsets
+#Divide the dataset into 70% training and 30% testing, to prevent overfitting from occurring
+inTrainTweets <- createDataPartition(y=tweets$label, p=0.7, list=FALSE)
+
+#Assign indexes to split the Tweets DTM into training and testing
+training <- tweets[inTrainTweets,]
+testing <- tweets[-inTrainTweets,]
+@
+
+<<warning=FALSE,echo=FALSE, cache=TRUE>>==
+#Split data into training and testing subsets
+#Divide the dataset into 70% training and 30% testing, to prevent overfitting from occurring
+inTrainTweets <- createDataPartition(y=tweets$label, p=0.7, list=FALSE)
+
+#Assign indexes to split the Tweets DTM into training and testing
+training <- tweets[inTrainTweets,]
+testing <- tweets[-inTrainTweets,]
+@
 
 \clearpage
 

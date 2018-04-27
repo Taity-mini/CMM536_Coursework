@@ -182,11 +182,22 @@ To start off I will clear the RStudio environment and import the required libari
 \hlkwd{library}\hlstd{(wordcloud)}
 \hlkwd{library}\hlstd{(wordcloud,}\hlkwc{quietly}\hlstd{=}\hlnum{TRUE}\hlstd{)}
 \hlkwd{library}\hlstd{(RColorBrewer,}\hlkwc{quietly}\hlstd{=}\hlnum{TRUE}\hlstd{)}
+\hlkwd{source}\hlstd{(}\hlstr{"http://bioconductor.org/biocLite.R"}\hlstd{)}
+\hlkwd{biocLite}\hlstd{(}\hlstr{"Rgraphviz"}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
-
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+FALSE package 'Rgraphviz' successfully unpacked and MD5 sums checked
+FALSE 
+FALSE The downloaded binary packages are in
+FALSE 	C:\Users\user\AppData\Local\Temp\Rtmp6vTShf\downloaded_packages
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
 
 Then set the working directory to the coursework folder
 
@@ -963,12 +974,13 @@ In order to pre-process the leaveRemain tweets, I built a custom corpus function
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{buildCorpus} \hlkwb{<-} \hlkwa{function} \hlstd{(}\hlkwc{tweets}\hlstd{,} \hlkwc{wordCloud}\hlstd{,} \hlkwc{wholeDataSet}\hlstd{,} \hlkwc{wordAssocation}\hlstd{)\{}
+\hlstd{buildCorpus} \hlkwb{<-} \hlkwa{function} \hlstd{(}\hlkwc{tweets}\hlstd{,} \hlkwc{wordCloud}\hlstd{,} \hlkwc{wholeDataSet}\hlstd{,} \hlkwc{wordAssocation}\hlstd{,} \hlkwc{dtm}\hlstd{)\{}
 
   \hlcom{#Check the optional parameters are set}
   \hlstd{wordA} \hlkwb{<-}\hlkwd{hasArg}\hlstd{(wordAssocation)}
   \hlstd{wds} \hlkwb{<-} \hlkwd{hasArg}\hlstd{(wholeDataSet)}
   \hlstd{wordc} \hlkwb{<-}  \hlkwd{hasArg}\hlstd{(wordCloud)}
+  \hlstd{dtmcheck} \hlkwb{<-} \hlkwd{hasArg}\hlstd{(dtm)}
 
   \hlstd{corp} \hlkwb{<-} \hlkwd{Corpus}\hlstd{(}\hlkwd{VectorSource}\hlstd{(tweets}\hlopt{$}\hlstd{text))}
 
@@ -1001,25 +1013,37 @@ In order to pre-process the leaveRemain tweets, I built a custom corpus function
 
 
   \hlcom{# ##Remove obvious words /stopwords}
- \hlkwa{if}\hlstd{(wds)\{}
-   \hlkwa{if}\hlstd{(wholeDataSet)\{}
-     \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp,} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)}\hlkwd{removeWords}\hlstd{(x,}\hlkwd{c}\hlstd{(}\hlkwd{stopwords}\hlstd{(}\hlstr{"english"}\hlstd{),}\hlstr{"amp"}\hlstd{,} \hlstr{"will"}\hlstd{,} \hlstr{"‰Û_"}\hlstd{,} \hlstr{"https"}\hlstd{,} \hlstr{"http"}\hlstd{,} \hlstr{"httpsdb"}\hlstd{,} \hlstr{"eu"}\hlstd{,} \hlstr{"brexit"}\hlstd{,} \hlstr{"rt"}\hlstd{,} \hlstr{"leave"}\hlstd{,} \hlstr{"remain"}\hlstd{,} \hlstr{"vote"}\hlstd{)))}
-   \hlstd{\}}
+  \hlkwa{if}\hlstd{(wds)\{}
+    \hlkwa{if}\hlstd{(wholeDataSet)\{}
+      \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp,} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)}\hlkwd{removeWords}\hlstd{(x,}\hlkwd{c}\hlstd{(}\hlkwd{stopwords}\hlstd{(}\hlstr{"english"}\hlstd{),}\hlstr{"amp"}\hlstd{,} \hlstr{"will"}\hlstd{,} \hlstr{"‰Û_"}\hlstd{,} \hlstr{"https"}\hlstd{,} \hlstr{"http"}\hlstd{,} \hlstr{"httpsdb"}\hlstd{,} \hlstr{"eu"}\hlstd{,} \hlstr{"brexit"}\hlstd{,} \hlstr{"rt"}\hlstd{,} \hlstr{"leave"}\hlstd{,} \hlstr{"remain"}\hlstd{,} \hlstr{"vote"}\hlstd{)))}
+    \hlstd{\}}
   \hlstd{\}} \hlkwa{else}\hlstd{\{}
     \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp,} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)}\hlkwd{removeWords}\hlstd{(x,}\hlkwd{c}\hlstd{(}\hlkwd{stopwords}\hlstd{(}\hlstr{"english"}\hlstd{),}\hlstr{"amp"}\hlstd{,} \hlstr{"will"}\hlstd{,} \hlstr{"‰Û_"}\hlstd{,} \hlstr{"https"}\hlstd{,} \hlstr{"http"}\hlstd{,} \hlstr{"httpsdb"}\hlstd{)))}
-\hlstd{\}}
+  \hlstd{\}}
 
 
 
   \hlcom{#remove punctuation last so urls are removed correctly}
   \hlstd{corp} \hlkwb{<-} \hlkwd{tm_map}\hlstd{(corp, removePunctuation)}
 
-  \hlcom{#If wordAssocation is true then create document term matrix}
+  \hlcom{#If wordAssocation is true then }
+
+
+
+  \hlcom{#If wordAssocation is true then create term document  matrix}
   \hlkwa{if}\hlstd{(wordA)\{}
     \hlkwa{if}\hlstd{(wordAssocation)\{}
-      \hlstd{dtm} \hlkwb{<-} \hlkwd{DocumentTermMatrix}\hlstd{(corp)}
+      \hlstd{tdm} \hlkwb{<-} \hlkwd{TermDocumentMatrix}\hlstd{(corp)}
     \hlstd{\}}
-  \hlstd{\}}\hlkwa{else if}\hlstd{(}\hlopt{!}\hlstd{wordA)\{} \hlcom{# If no  wordAssocation then create TermDocument Matrix}
+    \hlkwa{else}\hlstd{\{}
+      \hlkwa{if}\hlstd{(dtm)\{}
+        \hlstd{dtm} \hlkwb{<-} \hlkwd{DocumentTermMatrix}\hlstd{(corp)}
+      \hlstd{\}}
+    \hlstd{\}}
+
+  \hlstd{\}}
+
+  \hlkwa{else if}\hlstd{(}\hlopt{!}\hlstd{wordA)\{} \hlcom{# If no  wordAssocation then create TermDocument Matrix}
     \hlstd{tdm} \hlkwb{<-} \hlkwd{TermDocumentMatrix}\hlstd{(corp)}
 
     \hlstd{m} \hlkwb{<-} \hlkwd{as.matrix}\hlstd{(tdm)}
@@ -1115,7 +1139,7 @@ To find the most frequent word in the collection of tweets, the whole leaveRemai
 
 \clearpage
 
-\subsection{Text Classification}
+\subsection{Text Analysis}
 
 \subsubsection{Most Frequent word in Tweet Collection}
 
@@ -1186,10 +1210,107 @@ Lets inspect the top 30 most frequent words in the tweet collection
 \end{knitrout}
 
 Now to plot the word association (term document matrix) against the frequent terms.
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{plot}\hlstd{(wordAssoication,} \hlkwc{term} \hlstd{= freq.terms,} \hlkwc{corThreshold} \hlstd{=} \hlnum{0.12}\hlstd{,} \hlkwc{weighting} \hlstd{= T)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\includegraphics{Rplot02.png}
 
 
+
+
+% 
+% <<warning=FALSE,echo=FALSE, cache=TRUE>>==
+% plot(wordAssoication, term = freq.terms, corThreshold = 0.12, weighting = T)
+% @
+
+
+
+\clearpage
 
 \subsubsection{Most Frequent Words in Both Leave \& Remain Tweets}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{#Leave}
+\hlstd{leaveWords} \hlkwb{<-} \hlkwd{buildCorpus}\hlstd{(leaveTweets,} \hlnum{FALSE}\hlstd{,}\hlnum{TRUE}\hlstd{)}
+\hlkwd{head}\hlstd{(leaveWords,} \hlnum{10}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+##  [1] "voteleave"    "leaveeu"      "strongerin"   "euref"       
+##  [5] "eureferendum" "june"         "referendum"   "campaign"    
+##  [9] "now"          "people"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{#Remain}
+\hlstd{remainWords} \hlkwb{<-} \hlkwd{buildCorpus}\hlstd{(remainTweets,} \hlnum{FALSE}\hlstd{,}\hlnum{TRUE}\hlstd{)}
+\hlkwd{head}\hlstd{(remainWords,} \hlnum{10}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+##  [1] "strongerin"   "euref"        "voteremain"   "europe"      
+##  [5] "says"         "eureferendum" "campaign"     "people"      
+##  [9] "boris"        "britain"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\clearpage
+
+\subsection{Text Classification}
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{dtm} \hlkwb{<-}  \hlkwd{buildCorpus}\hlstd{(leaveRemainTweets,}\hlnum{FALSE}\hlstd{,}\hlnum{TRUE}\hlstd{,}\hlnum{FALSE}\hlstd{,}\hlnum{TRUE}\hlstd{)}
+
+\hlstd{dtm} \hlkwb{<-} \hlkwd{as.matrix}\hlstd{(dtm)}
+\hlstd{tweets} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(dtm)}
+
+\hlstd{tweets}\hlopt{$}\hlstd{label} \hlkwb{<-} \hlstd{leaveRemainTweets}\hlopt{$}\hlstd{label}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{#Split data into training and testing subsets}
+\hlcom{#Divide the dataset into 70% training and 30% testing, to prevent overfitting from occurring}
+\hlstd{inTrainTweets} \hlkwb{<-} \hlkwd{createDataPartition}\hlstd{(}\hlkwc{y}\hlstd{=tweets}\hlopt{$}\hlstd{label,} \hlkwc{p}\hlstd{=}\hlnum{0.7}\hlstd{,} \hlkwc{list}\hlstd{=}\hlnum{FALSE}\hlstd{)}
+
+\hlcom{#Assign indexes to split the Tweets DTM into training and testing}
+\hlstd{training} \hlkwb{<-} \hlstd{tweets[inTrainTweets,]}
+\hlstd{testing} \hlkwb{<-} \hlstd{tweets[}\hlopt{-}\hlstd{inTrainTweets,]}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
 
 \clearpage
 
