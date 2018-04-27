@@ -17,46 +17,43 @@
 \endgroup
 
 \datalist[entry]{none/global//global/global}
-  \entry{6779381}{inproceedings}{}
+  \entry{PHRIDVIRAJ2014255}{article}{}
     \name{author}{2}{}{%
-      {{hash=DPB}{%
-         family={Dongre},
-         familyi={D\bibinitperiod},
-         given={P.\bibnamedelima B.},
-         giveni={P\bibinitperiod\bibinitdelim B\bibinitperiod},
+      {{hash=PM}{%
+         family={PhridviRaj},
+         familyi={P\bibinitperiod},
+         given={M.S.B.},
+         giveni={M\bibinitperiod},
       }}%
-      {{hash=MLG}{%
-         family={Malik},
-         familyi={M\bibinitperiod},
-         given={L.\bibnamedelima G.},
-         giveni={L\bibinitperiod\bibinitdelim G\bibinitperiod},
+      {{hash=GC}{%
+         family={GuruRao},
+         familyi={G\bibinitperiod},
+         given={C.V.},
+         giveni={C\bibinitperiod},
       }}%
     }
-    \keyw{data mining;estimation theory;pattern classification;time-varying
-  systems;trees (mathematics);Hoeffding boundary;Web page visits;call
-  records;classification accuracy;classification techniques;classifier
-  performance estimation;concept drift scenarios;data mining techniques;data
-  stream mining;drastic drop;drift detection;ensemble classifier;instance
-  selection method;option trees;possibly unbound streams;real time data stream
-  classification;relational tuples;sensor readings;sliding-window
-  approach;time-varying stream;Accuracy;Algorithm design and
-  analysis;Bagging;Classification algorithms;Conferences;Data mining;Heuristic
-  algorithms;Data stream mining;concept drift;dynamic environment;ensemble
-  classifier}
-    \strng{namehash}{DPBMLG1}
-    \strng{fullhash}{DPBMLG1}
+    \keyw{Clustering, Streams, Mining, Dimensionality reduction, Text stream,
+  Data streams}
+    \strng{namehash}{PMGC1}
+    \strng{fullhash}{PMGC1}
     \field{labelnamesource}{author}
     \field{labeltitlesource}{title}
-    \field{booktitle}{2014 IEEE International Advance Computing Conference
-  (IACC)}
     \verb{doi}
-    \verb 10.1109/IAdCC.2014.6779381
+    \verb https://doi.org/10.1016/j.protcy.2013.12.483
     \endverb
-    \field{pages}{533\bibrangedash 537}
-    \field{title}{A review on real time data stream classification and adapting
-  to various concept drift scenarios}
+    \field{issn}{2212-0173}
+    \field{note}{The 7th International Conference Interdisciplinarity in
+  Engineering, INTER-ENG 2013, 10-11 October 2013, Petru Maior University of
+  Tirgu Mures, Romania}
+    \field{pages}{255 \bibrangedash  263}
+    \field{title}{Data Mining – Past, Present and Future – A Typical Survey
+  on Data Streams}
+    \verb{url}
+    \verb http://www.sciencedirect.com/science/article/pii/S2212017313006683
+    \endverb
+    \field{volume}{12}
+    \field{journaltitle}{Procedia Technology}
     \field{year}{2014}
-    \warn{\item Invalid format of field 'month'}
   \endentry
 \enddatalist
 \endinput

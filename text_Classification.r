@@ -221,21 +221,27 @@ svmModel
 
 #Evaluate
 
-predictkNN <- predict(svmModel,testing)
-confusionMatrix(predictkNN, testing$label)
+predictSVM <- predict(svmModel,testing)
+confusionMatrix(predictSVM, testing$label)
 
 
 #Improved
 
-train_control<- trainControl(method="cv", number=10,verboseIter=FALSE)
+train_control<- trainControl(method="cv", number=3,verboseIter=FALSE)
 
 
 
-rfModel <- train(label~ ., data = training,
+SVMModel2 <- train(label~ ., data = training,
                   trControl = train_control,
-                  tuneLength =10,
-                  method = "rf"
+                  tuneLength =5,
+                  method = "svmRadial"
                   
+)
+
+c50Model <- train(label~ ., data = training,
+                 trControl = train_control,
+                 tuneLength =10,
+                 method="C5.0"
 )
 
 RFModel<- train(label~., data=training,
@@ -247,5 +253,5 @@ RFModel<- train(label~., data=training,
 
 
 
-predictSVM <- predict(svmModel2,testing)
-confusionMatrix(predictSVM, testing$label)
+predictSVM2 <- predict(SVMModel2,testing)
+confusionMatrix(predictSVM2, testing$label)

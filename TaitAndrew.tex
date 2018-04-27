@@ -77,6 +77,8 @@
 \usepackage{lmodern} % for bold teletype font
 \usepackage{minted}
 \usepackage{underscore}
+\usepackage{pdfpages}
+\usepackage{graphicx}
 
 \usepackage{hyperref}
 \hypersetup{
@@ -117,8 +119,8 @@
 
 \section{Research}
 
-[your text goes here]
-The paper that was chosen for this work is \cite{6779381}. The authors provided a full review on different streaming algorithms and methos that handle concept drfit?. Below is a review of this paper that includes problem statement, related work and methods applied.\\
+
+The paper that was chosen for this work is \cite{PHRIDVIRAJ2014255}. The authors provided a full review on different streaming algorithms and methos that handle data mining. Below is a review of this paper that includes problem statement, related work and methods applied.
 
 \textcolor{blue}{\textit{Notice how I cited the paper, and how does it appear in the document, to do so, you need to have a file in your working director (references.bib), this file simply contains the bibtext items for the papers you chose. These BibTex items are often avaiable to download from publishers website, see Figure~\ref{fig1}}}
 \subsection{Problem Statement}
@@ -141,11 +143,11 @@ What is this paper about? your text goes here, your text goes here your text goe
 
 \subsection{Dataset Choice}
 
-The dataset that has been chosen for this part of the coursework is the 'adult' dataset. This is avaiable on the UCI repository.
+The dataset that has been chosen for this part of the coursework is the 'adult' dataset. This is avaiable on the UCI repository. It has been proved to a good evaluation of classification methods
 
 \url{https://archive.ics.uci.edu/ml/datasets/adult}
 
-The dataset that has been chosen for this part of the course work is IRIS. This is available on the UCI repository. The set was chosen because of .... It proves to be a good set for evaluating 'x' methods .... 
+
 
 \subsection{Data Exploration}
 
@@ -182,22 +184,11 @@ To start off I will clear the RStudio environment and import the required libari
 \hlkwd{library}\hlstd{(wordcloud)}
 \hlkwd{library}\hlstd{(wordcloud,}\hlkwc{quietly}\hlstd{=}\hlnum{TRUE}\hlstd{)}
 \hlkwd{library}\hlstd{(RColorBrewer,}\hlkwc{quietly}\hlstd{=}\hlnum{TRUE}\hlstd{)}
-\hlkwd{source}\hlstd{(}\hlstr{"http://bioconductor.org/biocLite.R"}\hlstd{)}
-\hlkwd{biocLite}\hlstd{(}\hlstr{"Rgraphviz"}\hlstd{)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-FALSE package 'Rgraphviz' successfully unpacked and MD5 sums checked
-FALSE 
-FALSE The downloaded binary packages are in
-FALSE 	C:\Users\user\AppData\Local\Temp\Rtmp6vTShf\downloaded_packages
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
+
 
 Then set the working directory to the coursework folder
 
@@ -828,17 +819,10 @@ Now that first sample has been tested, lets make some predictions
 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in .jcall("{}RJavaTools"{}, "{}Z"{}, "{}hasField"{}, .jcast(x, "{}java/lang/Object"{}), : java.lang.NullPointerException}}
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in sprintf("{}Predicted: \%s"{}, predictions): object 'predictions' not found}}
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in is.factor(x): object 'predictions' not found}}
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in confusionMatrix(predictions, sample\$class): object 'predictions' not found}}
-
-{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in cat("{}Accuracy is: "{}, confusion.mstream\$overall["{}Accuracy"{}]): object 'confusion.mstream' not found}}\end{kframe}
+\begin{alltt}
+Accuracy is:  0.86
+\end{alltt}
+\end{kframe}
 \end{knitrout}
 
 
@@ -902,11 +886,19 @@ Finnally lets plot the accuracy vs the chunk number
 \end{knitrout}
 
 
+\begin{figure}[H]
+\begin{center}
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
 \includegraphics[width=\maxwidth]{figure/unnamed-chunk-65-1} 
 
 \end{knitrout}
+\caption {Chunk Number vs Accuracy}
+\label{fig2}
+\end {center}
+\end {figure}
+
+
 
 \clearpage
 
@@ -1094,7 +1086,7 @@ By using the buildCorpus function with the word cloud parameter set to TRUE, it 
 
 \end{knitrout}
 \caption {Word cloud of leave tweets}
-\label{fig2}
+\label{fig3}
 \end {center}
 \end {figure}
 
@@ -1107,7 +1099,7 @@ By using the buildCorpus function with the word cloud parameter set to TRUE, it 
 
 \end{knitrout}
 \caption {Word cloud of Remain tweets}
-\label{fig3}
+\label{fig4}
 \end {center}
 \end {figure}
 
@@ -1218,19 +1210,27 @@ Now to plot the word association (term document matrix) against the frequent ter
 \end{kframe}
 \end{knitrout}
 
-\includegraphics{Rplot02.png}
+
+\begin{figure}[H]
+\begin{center}
+\caption {Word Association Plot}
+\includegraphics[page=1,width=.45\textwidth]{{wordAPlot.pdf}
+\label{fig5}
+\end {center}
+\end {figure}
+
+
+
+% \includepdf[pages={1-},scale=0.75]{wordAPlot.pdf}
 
 
 
 
-% 
-% <<warning=FALSE,echo=FALSE, cache=TRUE>>==
-% plot(wordAssoication, term = freq.terms, corThreshold = 0.12, weighting = T)
-% @
 
 
 
-\clearpage
+
+
 
 \subsubsection{Most Frequent Words in Both Leave \& Remain Tweets}
 
@@ -1310,6 +1310,112 @@ Now to plot the word association (term document matrix) against the frequent ter
 \end{kframe}
 \end{knitrout}
 
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{#Set Train Control to cross-validation 5 fold}
+\hlstd{train_control}\hlkwb{<-} \hlkwd{trainControl}\hlstd{(}\hlkwc{method}\hlstd{=}\hlstr{"cv"}\hlstd{,} \hlkwc{number}\hlstd{=}\hlnum{5}\hlstd{,}\hlkwc{verboseIter}\hlstd{=}\hlnum{FALSE}\hlstd{)}
+
+\hlcom{#Set model to SVM with tunelength of 10}
+
+\hlstd{svmModel} \hlkwb{<-} \hlkwd{train}\hlstd{(label}\hlopt{~} \hlstd{.,} \hlkwc{data} \hlstd{= training,}
+                  \hlkwc{trControl} \hlstd{= train_control,}
+                  \hlkwc{tuneLength} \hlstd{=}\hlnum{10}\hlstd{,}
+                  \hlkwc{method} \hlstd{=} \hlstr{"svmRadial"}
+
+\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{svmModel}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+## Support Vector Machines with Radial Basis Function Kernel 
+## 
+## 1599 samples
+## 6027 predictors
+##    2 classes: 'Leave', 'Remain' 
+## 
+## No pre-processing
+## Resampling: Cross-Validated (5 fold) 
+## Summary of sample sizes: 1279, 1279, 1279, 1280, 1279 
+## Resampling results across tuning parameters:
+## 
+##   C       Accuracy   Kappa    
+##     0.25  0.9011853  0.8038224
+##     0.50  0.9018084  0.8048067
+##     1.00  0.9024353  0.8058202
+##     2.00  0.9105682  0.8210212
+##     4.00  0.9136932  0.8271741
+##     8.00  0.9136932  0.8271741
+##    16.00  0.9136932  0.8271741
+##    32.00  0.9136932  0.8271741
+##    64.00  0.9136932  0.8271741
+##   128.00  0.9136932  0.8271741
+## 
+## Tuning parameter 'sigma' was held constant at a value of 0.06439394
+## Accuracy was used to select the optimal model using the largest value.
+## The final values used for the model were sigma = 0.06439394 and C = 4.
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{#Evaluate}
+
+\hlstd{predictSVM} \hlkwb{<-} \hlkwd{predict}\hlstd{(svmModel,testing)}
+\hlkwd{confusionMatrix}\hlstd{(predictSVM, testing}\hlopt{$}\hlstd{label)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction Leave Remain
+##     Leave    332     11
+##     Remain    44    297
+##                                           
+##                Accuracy : 0.9196          
+##                  95% CI : (0.8966, 0.9389)
+##     No Information Rate : 0.5497          
+##     P-Value [Acc > NIR] : < 2.2e-16       
+##                                           
+##                   Kappa : 0.8391          
+##  Mcnemar's Test P-Value : 1.597e-05       
+##                                           
+##             Sensitivity : 0.8830          
+##             Specificity : 0.9643          
+##          Pos Pred Value : 0.9679          
+##          Neg Pred Value : 0.8710          
+##              Prevalence : 0.5497          
+##          Detection Rate : 0.4854          
+##    Detection Prevalence : 0.5015          
+##       Balanced Accuracy : 0.9236          
+##                                           
+##        'Positive' Class : Leave           
+## 
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
 
 
 \clearpage

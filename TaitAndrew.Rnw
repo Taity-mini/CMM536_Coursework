@@ -27,6 +27,8 @@
 \usepackage{lmodern} % for bold teletype font
 \usepackage{minted}
 \usepackage{underscore}
+\usepackage{pdfpages}
+\usepackage{graphicx}
 
 \usepackage{hyperref}
 \hypersetup{
@@ -68,8 +70,8 @@
 
 \section{Research}
 
-[your text goes here]
-The paper that was chosen for this work is \cite{6779381}. The authors provided a full review on different streaming algorithms and methos that handle concept drfit?. Below is a review of this paper that includes problem statement, related work and methods applied.\\
+
+The paper that was chosen for this work is \cite{PHRIDVIRAJ2014255}. The authors provided a full review on different streaming algorithms and methos that handle data mining. Below is a review of this paper that includes problem statement, related work and methods applied.
 
 \textcolor{blue}{\textit{Notice how I cited the paper, and how does it appear in the document, to do so, you need to have a file in your working director (references.bib), this file simply contains the bibtext items for the papers you chose. These BibTex items are often avaiable to download from publishers website, see Figure~\ref{fig1}}}
 \subsection{Problem Statement}
@@ -92,11 +94,11 @@ What is this paper about? your text goes here, your text goes here your text goe
 
 \subsection{Dataset Choice}
 
-The dataset that has been chosen for this part of the coursework is the 'adult' dataset. This is avaiable on the UCI repository.
+The dataset that has been chosen for this part of the coursework is the 'adult' dataset. This is avaiable on the UCI repository. It has been proved to a good evaluation of classification methods
 
 \url{https://archive.ics.uci.edu/ml/datasets/adult}
 
-The dataset that has been chosen for this part of the course work is IRIS. This is available on the UCI repository. The set was chosen because of .... It proves to be a good set for evaluating 'x' methods .... 
+
 
 \subsection{Data Exploration}
 
@@ -131,8 +133,7 @@ library(tm)
 library(wordcloud)
 library(wordcloud,quietly=TRUE)
 library(RColorBrewer,quietly=TRUE)
-source("http://bioconductor.org/biocLite.R")
-biocLite("Rgraphviz")
+
 @
 
 <<warning=FALSE,echo=FALSE, comment=FALSE, message=FALSE, Include=FALSE>>==
@@ -158,8 +159,7 @@ library(tm)
 library(wordcloud)
 library(wordcloud,quietly=TRUE)
 library(RColorBrewer,quietly=TRUE)
-source("http://bioconductor.org/biocLite.R")
-biocLite("Rgraphviz")
+
 @
 
 Then set the working directory to the coursework folder
@@ -650,18 +650,8 @@ confusion.mstream <- confusionMatrix(predictions, sample$class)
 cat("Accuracy is: ", confusion.mstream$overall["Accuracy"])
 @
 
-<<warning=FALSE,echo=FALSE>>==
-##Do some prediction to test the model
-
-predictions <- predict(myboostedclasifier, sample)
-table(sprintf("Reality: %s", sample$class),
-      sprintf("Predicted: %s", predictions))
-
-#Convert predictions to a factor so it will work with confusion matrix
-predictions <- as.factor(predictions)
-confusion.mstream <- confusionMatrix(predictions, sample$class)
-
-cat("Accuracy is: ", confusion.mstream$overall["Accuracy"])
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+Accuracy is:  0.86
 @
 
 
@@ -730,10 +720,18 @@ plot(accuracies,type='l',col='red',
 @
 
 
+\begin{figure}[H]
+\begin{center}
 <<warning=FALSE,echo=FALSE>>==
 plot(accuracies,type='l',col='red',
      xlab="Chunk Number",ylab="Accuracy",frame=FALSE)
 @
+\caption {Chunk Number vs Accuracy}
+\label{fig2}
+\end {center}
+\end {figure}
+
+
 
 \clearpage
 
@@ -996,7 +994,7 @@ remainWordCloud <- buildCorpus(remainTweets,TRUE)
 leaveWordCloud <- buildCorpus(leaveTweets,TRUE)
 @
 \caption {Word cloud of leave tweets}
-\label{fig2}
+\label{fig3}
 \end {center}
 \end {figure}
 
@@ -1007,7 +1005,7 @@ leaveWordCloud <- buildCorpus(leaveTweets,TRUE)
 remainWordCloud <- buildCorpus(remainTweets,TRUE)
 @
 \caption {Word cloud of Remain tweets}
-\label{fig3}
+\label{fig4}
 \end {center}
 \end {figure}
 
@@ -1086,19 +1084,27 @@ Now to plot the word association (term document matrix) against the frequent ter
 plot(wordAssoication, term = freq.terms, corThreshold = 0.12, weighting = T)
 @
 
-\includegraphics{Rplot02.png}
+
+\begin{figure}[H]
+\begin{center}
+\caption {Word Association Plot}
+\includegraphics[page=1,width=.45\textwidth]{{wordAPlot.pdf}
+\label{fig5}
+\end {center}
+\end {figure}
+
+
+
+% \includepdf[pages={1-},scale=0.75]{wordAPlot.pdf}
 
 
 
 
-% 
-% <<warning=FALSE,echo=FALSE, cache=TRUE>>==
-% plot(wordAssoication, term = freq.terms, corThreshold = 0.12, weighting = T)
-% @
 
 
 
-\clearpage
+
+
 
 \subsubsection{Most Frequent Words in Both Leave \& Remain Tweets}
 
@@ -1171,6 +1177,61 @@ inTrainTweets <- createDataPartition(y=tweets$label, p=0.7, list=FALSE)
 training <- tweets[inTrainTweets,]
 testing <- tweets[-inTrainTweets,]
 @
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+
+
+#Set Train Control to cross-validation 5 fold
+train_control<- trainControl(method="cv", number=5,verboseIter=FALSE)
+
+#Set model to SVM with tunelength of 10
+
+svmModel <- train(label~ ., data = training,
+                  trControl = train_control,
+                  tuneLength =10,
+                  method = "svmRadial"
+                
+)
+@
+
+<<warning=FALSE,echo=FALSE, cache=TRUE>>==
+#Turn on Parraell Processing to speed up classification
+cl <- makeCluster(detectCores(), type='PSOCK')
+registerDoParallel(cl)
+
+#Set Train Control to cross-validation 5 fold
+train_control<- trainControl(method="cv", number=5,verboseIter=FALSE)
+
+#Set model to SVM with tunelength of 10
+
+svmModel <- train(label~ ., data = training,
+                  trControl = train_control,
+                  tuneLength =10,
+                  method = "svmRadial"
+                
+)
+@
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+svmModel
+@
+
+<<warning=FALSE,echo=FALSE, cache=TRUE>>==
+svmModel
+@
+
+<<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#Evaluate
+
+predictSVM <- predict(svmModel,testing)
+confusionMatrix(predictSVM, testing$label)
+@
+
+<<warning=FALSE,echo=FALSE, cache=TRUE>>==
+predictSVM <- predict(svmModel,testing)
+confusionMatrix(predictSVM, testing$label)
+@
+
 
 \clearpage
 
