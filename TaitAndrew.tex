@@ -1210,7 +1210,7 @@ Similar with European with 'must' and 'now'. Also 'Farage' and 'debate'.
 \begin{figure}[H]
 \begin{center}
 \includegraphics[page=1,width=.90\textwidth]{{wordAPlot.pdf}}
-\caption {Word Association Plot}
+\caption {Word Association Plot (Zoom to see words)}
 \label{fig5}
 \end {center}
 \end {figure}
@@ -1270,15 +1270,24 @@ Similar with European with 'must' and 'now'. Also 'Farage' and 'debate'.
 \subsection{Text Classification}
 
 \subsubsection{kNNModel}
+For the text classification of the brexit tweets, I decided to use the kNN Model again, as it has proven to be good starting/base line in previous exercises.
 
+
+First off I used my buildCorpus function again but set the wholedataset parameter to TRUE, along with the dtm parameter to TRUE.
+
+This creates a document term matrix, that is changed to a matrix and dataframe in turn.
+The tweet label is added to the new dataframe.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
+\hlcom{#Create a document term matrix from build corpus function.}
 \hlstd{dtm} \hlkwb{<-}  \hlkwd{buildCorpus}\hlstd{(leaveRemainTweets,}\hlnum{FALSE}\hlstd{,}\hlnum{TRUE}\hlstd{,}\hlnum{FALSE}\hlstd{,}\hlnum{TRUE}\hlstd{)}
 
+\hlcom{#Convert dtm to matrix}
 \hlstd{dtm} \hlkwb{<-} \hlkwd{as.matrix}\hlstd{(dtm)}
+\hlcom{#Then a data frame}
 \hlstd{tweets} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(dtm)}
-
+\hlcom{#Add label to dataframe}
 \hlstd{tweets}\hlopt{$}\hlstd{label} \hlkwb{<-} \hlstd{leaveRemainTweets}\hlopt{$}\hlstd{label}
 \end{alltt}
 \end{kframe}
@@ -1286,6 +1295,8 @@ Similar with European with 'must' and 'now'. Also 'Farage' and 'debate'.
 
 
 
+
+The tweets are then separated into 70\% training and 30\% testing subsets (prevent over fitting from occurring).
 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -1303,6 +1314,7 @@ Similar with European with 'must' and 'now'. Also 'Farage' and 'debate'.
 
 
 
+The kNN Model is then setup with cross validation (5 fold) and a tune length of 5. 
 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -1358,6 +1370,9 @@ Similar with European with 'must' and 'now'. Also 'Farage' and 'debate'.
 \end{kframe}
 \end{knitrout}
 
+At first inspect of the kNN Model it produces an accuracy of 84.80\% and a kappa value of 68.48\%
+
+
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -1402,10 +1417,16 @@ Similar with European with 'must' and 'now'. Also 'Farage' and 'debate'.
 \end{kframe}
 \end{knitrout}
 
+When predicted against the testing subset the kNNModel, it produces an accuracy of 83.63\%, which isn't too bad but not excellent either. As it incorrectly classifies 108 leave tweets and 4 remain tweets incorrectly.
+
 
 \clearpage
 
 \subsubsection{Improved SVM Model}
+
+To improve the classification model, I decided to use the supported vector machine algorithm.
+
+The parameters are the same as the knnModel to make a fairer comparison.
 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -1468,6 +1489,11 @@ Similar with European with 'must' and 'now'. Also 'Farage' and 'debate'.
 \end{kframe}
 \end{knitrout}
 
+The highest accuracy the SVM model produces is 90.49\% at the c value of 4.
+
+
+\clearpage
+
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -1512,6 +1538,7 @@ Similar with European with 'must' and 'now'. Also 'Farage' and 'debate'.
 \end{kframe}
 \end{knitrout}
 
+When compared against the testing subset, the Accuracy is 92.69\% , which is a nearly 10\% performance increased against the kNNModel. With only 20 leave tweets and 30 remain tweets incorrectly classified.
 
 \clearpage
 

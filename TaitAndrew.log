@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6500 64-bit) (preloaded format=pdflatex 2018.4.17)  27 APR 2018 22:33
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6500 64-bit) (preloaded format=pdflatex 2018.4.17)  27 APR 2018 22:53
 entering extended mode
 **./TaitAndrew.tex
 (TaitAndrew.tex
@@ -2078,62 +2078,65 @@ Package xcolor Warning: Incompatible color definition on input line 1259.
 
 [21]
 
-Package xcolor Warning: Incompatible color definition on input line 1275.
+Package xcolor Warning: Incompatible color definition on input line 1281.
 
 
-Package xcolor Warning: Incompatible color definition on input line 1291.
+Package xcolor Warning: Incompatible color definition on input line 1302.
 
 
-Overfull \hbox (14.97972pt too wide) in paragraph at lines 1294--1294
+Overfull \hbox (14.97972pt too wide) in paragraph at lines 1305--1305
 [][]\OT1/lmtt/m/it/10 #Divide the dataset into 70% training and 30% testing, to
  prevent overfitting from occurring[][] 
  []
 
 
-Package xcolor Warning: Incompatible color definition on input line 1308.
+Package xcolor Warning: Incompatible color definition on input line 1320.
 
 
-Package xcolor Warning: Incompatible color definition on input line 1327.
+Package xcolor Warning: Incompatible color definition on input line 1339.
 
 
-Package xcolor Warning: Incompatible color definition on input line 1335.
-
-
-Package xcolor Warning: Incompatible color definition on input line 1362.
+Package xcolor Warning: Incompatible color definition on input line 1347.
 
 [22
 
 ]
 
-Package xcolor Warning: Incompatible color definition on input line 1373.
+Package xcolor Warning: Incompatible color definition on input line 1377.
+
+
+Package xcolor Warning: Incompatible color definition on input line 1388.
 
 [23]
 
-Package xcolor Warning: Incompatible color definition on input line 1411.
+Package xcolor Warning: Incompatible color definition on input line 1432.
 
 
-Package xcolor Warning: Incompatible color definition on input line 1431.
+Package xcolor Warning: Incompatible color definition on input line 1452.
 
 
-Package xcolor Warning: Incompatible color definition on input line 1439.
-
-
-Package xcolor Warning: Incompatible color definition on input line 1472.
-
-
-Package xcolor Warning: Incompatible color definition on input line 1483.
+Package xcolor Warning: Incompatible color definition on input line 1460.
 
 [24
 
-] [25] [26
+]
+
+Package xcolor Warning: Incompatible color definition on input line 1498.
+
+
+Package xcolor Warning: Incompatible color definition on input line 1509.
+
+[25
+
+] [26
 
 
 ]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1533.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 1533.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1560.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 1560.
  (TaitAndrew.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1533.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1533.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1560.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1560.
 
 Package rerunfilecheck Info: File `TaitAndrew.out' has not changed.
 (rerunfilecheck)             Checksum: BCBC0C75E86548142D2005F2E8F7F33E;1626.
@@ -2168,7 +2171,7 @@ fonts/type1/public/lm/lmr12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public
 KTeX 2.9/fonts/type1/public/lm/lmtk10.pfb><C:/Program Files/MiKTeX 2.9/fonts/ty
 pe1/public/lm/lmtt10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmt
 ti10.pfb>
-Output written on TaitAndrew.pdf (26 pages, 397191 bytes).
+Output written on TaitAndrew.pdf (26 pages, 398885 bytes).
 PDF statistics:
  334 PDF objects out of 1000 (max. 8388607)
  57 named destinations out of 1000 (max. 500000)

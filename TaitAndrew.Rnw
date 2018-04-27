@@ -1090,7 +1090,7 @@ Similar with European with 'must' and 'now'. Also 'Farage' and 'debate'.
 \begin{figure}[H]
 \begin{center}
 \includegraphics[page=1,width=.90\textwidth]{{wordAPlot.pdf}}
-\caption {Word Association Plot}
+\caption {Word Association Plot (Zoom to see words)}
 \label{fig5}
 \end {center}
 \end {figure}
@@ -1134,14 +1134,22 @@ head(remainWords, 10)
 \subsection{Text Classification}
 
 \subsubsection{kNNModel}
-For the text classification of
+For the text classification of the brexit tweets, I decided to use the kNN Model again, as it has proven to be good starting/base line in previous exercises.
 
+
+First off I used my buildCorpus function again but set the wholedataset parameter to TRUE, along with the dtm parameter to TRUE.
+
+This creates a document term matrix, that is changed to a matrix and dataframe in turn.
+The tweet label is added to the new dataframe.
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
+#Create a document term matrix from build corpus function.
 dtm <-  buildCorpus(leaveRemainTweets,FALSE,TRUE,FALSE,TRUE)
 
+#Convert dtm to matrix
 dtm <- as.matrix(dtm)
+#Then a data frame
 tweets <- data.frame(dtm)
-
+#Add label to dataframe
 tweets$label <- leaveRemainTweets$label
 @
 
@@ -1156,6 +1164,8 @@ tweets <- data.frame(dtm)
 tweets$label <- leaveRemainTweets$label
 @
 
+The tweets are then separated into 70\% training and 30\% testing subsets (prevent over fitting from occurring).
+
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
 #Split data into training and testing subsets
 #Divide the dataset into 70% training and 30% testing, to prevent overfitting from occurring
@@ -1176,6 +1186,7 @@ training <- tweets[inTrainTweets,]
 testing <- tweets[-inTrainTweets,]
 @
 
+The kNN Model is then setup with cross validation (5 fold) and a tune length of 5. 
 
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
 train_control<- trainControl(method="cv", number=5,verboseIter=FALSE)
@@ -1208,6 +1219,9 @@ kNNTweets
 <<warning=FALSE,echo=FALSE, cache=TRUE>>==
 kNNTweets
 @
+
+At first inspect of the kNN Model it produces an accuracy of 84.80\% and a kappa value of 68.48\%
+
 
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
 #Evaluate
@@ -1221,10 +1235,16 @@ predictkNNTweets <- predict(kNNTweets,testing)
 confusionMatrix(predictkNNTweets, testing$label)
 @
 
+When predicted against the testing subset the kNNModel, it produces an accuracy of 83.63\%, which isn't too bad but not excellent either. As it incorrectly classifies 108 leave tweets and 4 remain tweets incorrectly.
+
 
 \clearpage
 
 \subsubsection{Improved SVM Model}
+
+To improve the classification model, I decided to use the supported vector machine algorithm.
+
+The parameters are the same as the knnModel to make a fairer comparison.
 
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
 
@@ -1268,6 +1288,11 @@ svmModel
 svmModel
 @
 
+The highest accuracy the SVM model produces is 90.49\% at the c value of 4.
+
+
+\clearpage
+
 <<warning=FALSE,eval=FALSE,comment=TRUE>>==
 #Evaluate
 
@@ -1280,6 +1305,7 @@ predictSVM <- predict(svmModel,testing)
 confusionMatrix(predictSVM, testing$label)
 @
 
+When compared against the testing subset, the Accuracy is 92.69\% , which is a nearly 10\% performance increased against the kNNModel. With only 20 leave tweets and 30 remain tweets incorrectly classified.
 
 \clearpage
 
